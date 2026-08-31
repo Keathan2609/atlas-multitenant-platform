@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import type { Request } from 'express';
-import { newId, type Prisma } from '@atlas/database';
+import { newId } from '@atlas/database';
 import type { Logger } from '@atlas/observability';
 import { LOGGER_TOKEN } from '../logging/logger.provider.js';
 import { PrismaService } from '../database/prisma.service.js';
@@ -44,6 +44,18 @@ export const AuditAction = {
 } as const;
 
 export type AuditAction = (typeof AuditAction)[keyof typeof AuditAction];
+
+/**
+ * The only capability the audit writer needs from a client.
+ *
+ * Kept minimal so both the scoped and unscoped Prisma clients — and their
+ * transaction variants — satisfy it structurally.
+ */
+export interface AuditCapableClient {
+  auditLog: {
+    create(args: { data: Record<string, unknown> }): Promise<unknown>;
+  };
+}
 
 export interface AuditEvent {
   organizationId: string;
@@ -100,9 +112,15 @@ export class AuditService {
    * Pass `tx` to enlist in an existing transaction — the org-creation flow
    * does this so the organization, its owner membership and the audit event
    * are one atomic unit.
+   *
+   * `tx` is typed structurally rather than as Prisma.TransactionClient so it
+   * accepts a transaction from a *tenant-scoped* client as well as an
+   * unscoped one. Those are different generated types, and requiring the
+   * unscoped one would push callers toward `unscoped.$transaction` — giving
+   * up tenant scoping precisely inside the mutations that most need it.
    */
-  async record(event: AuditEvent, tx?: Prisma.TransactionClient): Promise<void> {
-    const client = tx ?? this.prisma.unscoped;
+  async record(event: AuditEvent, tx?: AuditCapableClient): Promise<void> {
+    const client: AuditCapableClient = tx ?? (this.prisma.unscoped as unknown as AuditCapableClient);
 
     await client.auditLog.create({
       data: {

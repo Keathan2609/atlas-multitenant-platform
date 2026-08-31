@@ -148,7 +148,14 @@ export class MembersService {
     newRole: OrganizationRole,
     requestContext: Pick<AuditEvent, 'ipAddress' | 'userAgent'>,
   ) {
-    return this.prisma.unscoped.$transaction(
+    // Scoped client, not unscoped. The extension survives into $transaction
+    // (verified against a live database), so every query below carries the
+    // tenant predicate even if a future edit forgets to write it. The
+    // explicit organizationId filters stay too — belt and braces on the two
+    // mutations most worth protecting.
+    const db = this.prisma.forTenant(tenant.organizationId);
+
+    return db.$transaction(
       async (tx) => {
         const target = await tx.organizationMembership.findFirst({
           where: { organizationId: tenant.organizationId, userId: targetUserId },
@@ -222,7 +229,10 @@ export class MembersService {
     targetUserId: string,
     requestContext: Pick<AuditEvent, 'ipAddress' | 'userAgent'>,
   ) {
-    return this.prisma.unscoped.$transaction(
+    // Scoped, for the same reason as changeRole above.
+    const db = this.prisma.forTenant(tenant.organizationId);
+
+    return db.$transaction(
       async (tx) => {
         const target = await tx.organizationMembership.findFirst({
           where: { organizationId: tenant.organizationId, userId: targetUserId },
