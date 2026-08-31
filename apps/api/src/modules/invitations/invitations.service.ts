@@ -295,7 +295,15 @@ export class InvitationsService {
 
     const organizationId = invitation.organizationId;
 
-    return this.prisma.unscoped.$transaction(async (tx) => {
+    // Scoped from here on. The tenant is unknown while the token is being
+    // resolved — that is why findLive() is one of the reviewed unscoped
+    // escape hatches — but once the invitation names its organization there
+    // is no reason to keep the unscoped client for the writes. Every query
+    // below then carries the tenant predicate even if a future edit forgets
+    // to write it, which is the same correction applied to MembersService.
+    const db = this.prisma.forTenant(organizationId);
+
+    return db.$transaction(async (tx) => {
       // Re-read inside the transaction. Between findLive and here the
       // invitation could have been revoked or accepted by a concurrent
       // request; the status check must happen under the same lock as the
