@@ -44,6 +44,9 @@
   --color-fg-inverted: #ffffff;
 
   /* ── Accent: cobalt. Interactive affordance only. ──────────────────────── */
+  /* #2354D6 measures 6.34:1 against the light surface, and white-on-accent
+     for the primary button is the same 6.34:1. Both clear WCAG AA. The dark
+     theme lightens it — see the note there. */
   --color-accent: #2354d6;
   --color-accent-hover: #1c46b8;
   --color-accent-active: #17399a;
@@ -99,8 +102,14 @@
  * Dark theme.
  *
  * Not an inversion. The canvas is a warm-neutral near-black rather than pure
- * black so hairlines remain visible, and the accent is lightened because
- * cobalt at #2354D6 fails contrast against a dark ground.
+ * black so hairlines remain visible.
+ *
+ * The accent is lightened to #6B95F5, and that is the one token that changes
+ * meaningfully between themes. Measured in the browser: the light accent
+ * #2354D6 scores only 2.80:1 against the dark surface #16181B — well under
+ * the 4.5:1 minimum — while #6B95F5 scores 6.13:1, matching the 6.34:1 the
+ * light accent achieves on its own ground. It is the same accent role at
+ * equivalent legibility, not a second accent.
  */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {

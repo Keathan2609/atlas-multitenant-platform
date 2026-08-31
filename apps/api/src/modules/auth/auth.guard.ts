@@ -68,10 +68,26 @@ export class AuthGuard implements CanActivate {
       );
     }
 
-    // Enforced for authenticated state-changing requests only. GET/HEAD/
-    // OPTIONS are required to be side-effect free, and blocking them would
-    // break ordinary navigation into the app.
-    if (!SAFE_METHODS.has(request.method)) {
+    // CSRF is enforced for authenticated state-changing requests only.
+    //
+    // Three exclusions, each for a distinct reason:
+    //
+    //  - Safe methods. GET/HEAD/OPTIONS are required to be side-effect free,
+    //    and blocking them would break ordinary navigation into the app.
+    //
+    //  - @Public() routes. These are unauthenticated entry points: they
+    //    *establish* a session rather than acting with one, so there is no
+    //    ambient credential for a cross-site request to abuse. Enforcing it
+    //    here was a real defect — a stale session cookie made the login route
+    //    resolve a session, which then demanded a CSRF token the caller had no
+    //    way to hold, locking the user out of signing in at all and breaking
+    //    "sign in as someone else". The residual risk, login-CSRF forcing a
+    //    victim into the attacker's account, is covered by SameSite=Lax on the
+    //    session cookie, which blocks the cross-site POST that attack needs.
+    //
+    //  - API-key callers, handled above: they send no cookies, and CSRF exists
+    //    to defend against the browser attaching credentials automatically.
+    if (!isPublic && !SAFE_METHODS.has(request.method)) {
       this.assertCsrf(request);
     }
 

@@ -112,6 +112,19 @@ async function main(): Promise<void> {
   const northstarId = await seedNorthstar(prisma, userIds);
   const meridianId = await seedMeridian(prisma, userIds);
 
+  // Backdate updatedAt to match createdAt.
+  //
+  // Prisma's @updatedAt stamps the write time and ignores any value supplied
+  // on create, so every seeded row ends up "updated" the moment the seed ran.
+  // That makes "recently updated" lists identical and useless — which is
+  // exactly what the overview screen is for. Raw SQL is the only way to set a
+  // managed column, and it is worth it: without this the seed cannot exercise
+  // ordering by recency at all.
+  await prisma.$executeRawUnsafe('UPDATE "public"."projects" SET "updatedAt" = "createdAt"');
+  await prisma.$executeRawUnsafe('UPDATE "public"."work_items" SET "updatedAt" = "createdAt"');
+  await prisma.$executeRawUnsafe('UPDATE "public"."teams" SET "updatedAt" = "createdAt"');
+  await prisma.$executeRawUnsafe('UPDATE "public"."organizations" SET "updatedAt" = "createdAt"');
+
   const counts = await prisma.$transaction([
     prisma.organization.count(),
     prisma.project.count(),

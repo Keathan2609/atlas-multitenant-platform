@@ -27,18 +27,33 @@ export function EmptyState({
   title,
   description,
   action,
+  size = 'default',
 }: {
   title: string;
   description?: string;
   action?: React.ReactNode;
+  /**
+   * `compact` for a section inside an otherwise populated page. A tall empty
+   * box there pushes everything below it off the screen to say nothing, which
+   * is the most common way an interface ends up feeling airy and useless.
+   */
+  size?: 'default' | 'compact';
 }) {
+  const compact = size === 'compact';
   return (
-    <div className="mx-auto flex max-w-sm flex-col items-center gap-1.5 py-4 text-center">
-      <p className="text-base font-medium text-fg">{title}</p>
-      {description && (
-        <p className="text-sm leading-relaxed text-fg-secondary">{description}</p>
+    <div
+      className={cx(
+        'mx-auto flex max-w-sm flex-col items-center text-center',
+        compact ? 'gap-1 py-1' : 'gap-1.5 py-4',
       )}
-      {action && <div className="mt-2">{action}</div>}
+    >
+      <p className={cx('font-medium text-fg', compact ? 'text-sm' : 'text-base')}>{title}</p>
+      {description && (
+        <p className={cx('leading-relaxed text-fg-secondary', compact ? 'text-xs' : 'text-sm')}>
+          {description}
+        </p>
+      )}
+      {action && <div className={compact ? 'mt-1.5' : 'mt-2'}>{action}</div>}
     </div>
   );
 }
