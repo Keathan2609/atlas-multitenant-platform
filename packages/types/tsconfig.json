@@ -3,9 +3,15 @@
   "compilerOptions": {
     "outDir": "dist",
     "rootDir": "src",
-    "module": "ESNext",
-    "moduleResolution": "Bundler"
+    "module": "CommonJS",
+    "moduleResolution": "Node"
   },
-  "include": ["src/**/*.ts"],
-  "exclude": ["node_modules", "dist", "src/**/*.spec.ts"]
+  "include": [
+    "src/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "src/**/*.spec.ts"
+  ]
 }

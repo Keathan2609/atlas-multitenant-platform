@@ -24,7 +24,13 @@
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "incremental": true
+    "incremental": true,
+    // Inside outDir on purpose. With the build-info file outside the output
+    // directory, any tool that wipes dist (nest build --deleteOutDir, rimraf)
+    // leaves tsc believing the emit is still current, so the next build
+    // silently produces nothing. Keeping them together makes the cache and
+    // the artifacts share a lifetime.
+    "tsBuildInfoFile": "dist/.tsbuildinfo"
   },
   "exclude": ["node_modules", "dist", ".next", ".turbo", "coverage"]
 }
