@@ -6,9 +6,12 @@ import { RequestContextMiddleware } from './common/logging/request-context.middl
 import { AuthGuard } from './modules/auth/auth.guard.js';
 import { AuthModule } from './modules/auth/auth.module.js';
 import { HealthModule } from './modules/health/health.module.js';
+import { AuditModule } from './common/audit/audit.module.js';
+import { OrganizationsModule } from './modules/organizations/organizations.module.js';
+import { MembersModule } from './modules/members/members.module.js';
 
 @Module({
-  imports: [CommonModule, AuthModule, HealthModule],
+  imports: [CommonModule, AuditModule, AuthModule, HealthModule, OrganizationsModule, MembersModule],
   providers: [
     // Global filter: every error leaves through one place, so no handler can
     // accidentally return an unshaped body or leak an internal message.
