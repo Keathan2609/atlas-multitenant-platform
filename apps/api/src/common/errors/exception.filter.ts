@@ -9,6 +9,7 @@ import {
 import type { Request, Response } from 'express';
 import type { Logger } from '@atlas/observability';
 import { AppError, ErrorCode, RateLimitedError, type ErrorDetail } from './app-error.js';
+import { translatePrismaError } from './prisma-error.js';
 import { LOGGER_TOKEN } from '../logging/logger.provider.js';
 
 export interface ErrorResponseBody {
@@ -79,22 +80,33 @@ export class AllExceptionsFilter implements ExceptionFilter {
     logLevel: 'warn' | 'error';
     logPayload: Record<string, unknown>;
   } {
-    if (exception instanceof AppError) {
+    // Prisma errors that represent a malformed request rather than a fault
+    // are translated first, so they take the AppError path below and are
+    // reported faithfully instead of becoming an opaque 500.
+    const translated = translatePrismaError(exception);
+    const candidate = translated ?? exception;
+
+    if (candidate instanceof AppError) {
+      const appError = candidate;
       return {
-        status: exception.status,
+        status: appError.status,
         body: {
           error: {
-            code: exception.code,
-            message: exception.message,
+            code: appError.code,
+            message: appError.message,
             requestId,
-            ...(exception.details ? { details: exception.details } : {}),
+            ...(appError.details ? { details: appError.details } : {}),
           },
         },
-        logLevel: exception.status >= 500 ? 'error' : 'warn',
+        logLevel: appError.status >= 500 ? 'error' : 'warn',
         logPayload: {
-          code: exception.code,
-          ...(exception.logContext ?? {}),
-          ...(exception.status >= 500 ? { err: exception } : {}),
+          code: appError.code,
+          ...(appError.logContext ?? {}),
+          // A translated Prisma error keeps the original attached at warn
+          // level, so genuine column-data corruption is still diagnosable
+          // even though the client sees a 404.
+          ...(translated ? { translatedFrom: 'prisma', err: exception } : {}),
+          ...(appError.status >= 500 ? { err: exception } : {}),
         },
       };
     }
