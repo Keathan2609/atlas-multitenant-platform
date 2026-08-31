@@ -29,6 +29,7 @@
   },
   "devDependencies": {
     "@atlas/config": "workspace:*",
+    "argon2": "^0.41.1",
     "dotenv": "^16.4.7",
     "dotenv-cli": "^8.0.0",
     "prisma": "^6.2.1",
