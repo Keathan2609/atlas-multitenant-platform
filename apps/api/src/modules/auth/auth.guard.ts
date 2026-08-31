@@ -15,6 +15,25 @@ export const IS_PUBLIC = 'atlas:isPublic';
 export const Public = () => SetMetadata(IS_PUBLIC, true);
 
 /**
+ * Exempts a route from the CSRF check.
+ *
+ * Deliberately narrow and deliberately explicit. This exists for exactly one
+ * situation: an endpoint that *establishes* a session rather than acting with
+ * one, which a caller may reach while still holding a stale session cookie
+ * from a previous sign-in. Login and registration are the only such endpoints.
+ *
+ * Two properties make this safe to have in the codebase:
+ *
+ *  - It is opt-in per route, so a future public mutation does not silently
+ *    inherit the exemption. Auditing the exemptions is `grep CsrfExempt`.
+ *  - It is only honoured on a route that is also @Public(). Applying it to an
+ *    authenticated route does nothing, so it cannot be used — or misused — to
+ *    disable CSRF on an endpoint that acts with ambient credentials.
+ */
+export const IS_CSRF_EXEMPT = 'atlas:csrfExempt';
+export const CsrfExempt = () => SetMetadata(IS_CSRF_EXEMPT, true);
+
+/**
  * Authenticates every request unless the route is explicitly `@Public()`.
  *
  * Registered globally, so the default for a new endpoint is "protected".
@@ -34,6 +53,11 @@ export class AuthGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+
+    const isCsrfExempt = this.reflector.getAllAndOverride<boolean>(IS_CSRF_EXEMPT, [
       context.getHandler(),
       context.getClass(),
     ]);
@@ -75,19 +99,26 @@ export class AuthGuard implements CanActivate {
     //  - Safe methods. GET/HEAD/OPTIONS are required to be side-effect free,
     //    and blocking them would break ordinary navigation into the app.
     //
-    //  - @Public() routes. These are unauthenticated entry points: they
-    //    *establish* a session rather than acting with one, so there is no
-    //    ambient credential for a cross-site request to abuse. Enforcing it
-    //    here was a real defect — a stale session cookie made the login route
-    //    resolve a session, which then demanded a CSRF token the caller had no
-    //    way to hold, locking the user out of signing in at all and breaking
-    //    "sign in as someone else". The residual risk, login-CSRF forcing a
-    //    victim into the attacker's account, is covered by SameSite=Lax on the
-    //    session cookie, which blocks the cross-site POST that attack needs.
+    //  - Routes marked @CsrfExempt() *and* @Public(). Both are required. This
+    //    covers session-establishing endpoints only — login and registration —
+    //    which a caller may reach while holding a stale session cookie from a
+    //    previous sign-in. Enforcing CSRF there was a real defect: the stale
+    //    cookie made the login route resolve a session, which then demanded a
+    //    token the caller had no way to hold, locking them out of signing in
+    //    and breaking "sign in as someone else". The residual risk, login-CSRF
+    //    forcing a victim into an attacker's account, is covered by
+    //    SameSite=Lax on the session cookie, which blocks the cross-site POST
+    //    that attack requires.
+    //
+    //    Note this is *not* a blanket exemption for public routes. A public
+    //    mutation added later gets CSRF enforced unless someone explicitly and
+    //    visibly opts it out.
     //
     //  - API-key callers, handled above: they send no cookies, and CSRF exists
     //    to defend against the browser attaching credentials automatically.
-    if (!isPublic && !SAFE_METHODS.has(request.method)) {
+    const skipCsrf = isPublic && isCsrfExempt;
+
+    if (!skipCsrf && !SAFE_METHODS.has(request.method)) {
       this.assertCsrf(request);
     }
 

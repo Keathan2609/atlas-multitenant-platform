@@ -25,7 +25,7 @@ import { RateLimit, RateLimitGuard } from '../../common/http/rate-limit.guard.js
 import { UnauthenticatedError } from '../../common/errors/app-error.js';
 import { AuthService } from './auth.service.js';
 import { SessionService } from './session.service.js';
-import { Public } from './auth.guard.js';
+import { CsrfExempt, Public } from './auth.guard.js';
 import { clearAuthCookies, setAuthCookies } from './cookies.js';
 
 @ApiTags('Authentication')
@@ -39,6 +39,10 @@ export class AuthController {
   ) {}
 
   @Public()
+  // Session-establishing: a caller may still hold a stale session cookie from a
+  // previous sign-in, and demanding a CSRF token they cannot have would lock
+  // them out of creating an account at all.
+  @CsrfExempt()
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Create an account and start a session' })
@@ -61,6 +65,9 @@ export class AuthController {
   }
 
   @Public()
+  // Session-establishing, same reasoning as register. This is what makes
+  // "sign in as someone else" work while a session cookie is present.
+  @CsrfExempt()
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Authenticate and start a session' })
