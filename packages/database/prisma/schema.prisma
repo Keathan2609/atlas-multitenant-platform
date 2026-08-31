@@ -1,0 +1,495 @@
+// ATLAS data model.
+//
+// ── Tenancy strategy ─────────────────────────────────────────────────────────
+// Shared schema, shared database, discriminator column. Every tenant-owned
+// table carries `organizationId`. The trade-offs are analysed in
+// docs/decisions/002-multi-tenant-data-model.md.
+//
+// Application-level scoping is enforced by the TenantScope repository layer,
+// but application code is fallible, so the schema adds a second, structural
+// line of defence: **composite foreign keys that include organizationId**.
+//
+// A Project references its Workspace through `(organizationId, workspaceId)`
+// rather than `workspaceId` alone. That composite FK makes it physically
+// impossible to attach a Project in org A to a Workspace in org B — Postgres
+// rejects the write regardless of what the application layer believes. Every
+// cross-entity reference inside a tenant uses this pattern.
+//
+// The cost is a redundant `organizationId` on child rows and slightly wider
+// indexes. For a system whose primary risk is cross-tenant leakage, having the
+// database refuse to represent an invalid state is worth that storage.
+//
+// ── Identifiers ──────────────────────────────────────────────────────────────
+// UUIDv7, generated in application code (see src/id.ts). Time-ordered, so
+// B-tree inserts stay at the right edge of the index instead of scattering
+// random pages like UUIDv4. See docs/decisions/006-identifier-strategy.md.
+//
+// ── Index ordering ───────────────────────────────────────────────────────────
+// Composite indexes lead with `organizationId` because every production query
+// filters on it. A leading tenant column also means one tenant's working set
+// stays contiguous in the index.
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = []
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Identity
+// ═══════════════════════════════════════════════════════════════════════════
+
+model User {
+  id           String    @id @db.Uuid
+  // Stored lowercase and trimmed. The application normalises before writing;
+  // the unique index is the backstop that makes duplicate signups impossible.
+  email        String    @unique @db.VarChar(320)
+  displayName  String    @db.VarChar(120)
+  // Argon2id encoded string (contains algorithm, params and salt).
+  // Nullable so SSO-only users can exist later without a schema change.
+  passwordHash String?   @db.VarChar(255)
+  avatarUrl    String?   @db.VarChar(2048)
+  emailVerifiedAt DateTime?
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  sessions           Session[]
+  memberships        OrganizationMembership[]
+  teamMemberships    TeamMembership[]
+  projectMemberships ProjectMembership[]
+  assignedWorkItems  WorkItem[]               @relation("WorkItemAssignee")
+  reportedWorkItems  WorkItem[]               @relation("WorkItemReporter")
+  auditEvents        AuditLog[]
+  sentInvitations    Invitation[]             @relation("InvitationInviter")
+  createdApiKeys     ApiKey[]                 @relation("ApiKeyCreator")
+
+  @@map("users")
+}
+
+model Session {
+  id        String   @id @db.Uuid
+  userId    String   @db.Uuid
+  // SHA-256 of the raw session token. The raw value only ever exists in the
+  // client's cookie, so a database leak does not yield usable sessions.
+  tokenHash String   @unique @db.Char(64)
+  // Denormalised from the cookie so we can show "active sessions" in settings
+  // and let a user recognise a device they don't own.
+  userAgent String?  @db.VarChar(512)
+  ipAddress String?  @db.VarChar(45)
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime @default(now())
+  lastSeenAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Listing a user's own sessions, and the expiry sweep.
+  @@index([userId, expiresAt])
+  @@index([expiresAt])
+  @@map("sessions")
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Organizations — the tenant boundary
+// ═══════════════════════════════════════════════════════════════════════════
+
+model Organization {
+  id        String   @id @db.Uuid
+  name      String   @db.VarChar(120)
+  // URL segment: /app/{slug}/projects. Immutable in practice — changing it
+  // breaks every bookmark — so the UI does not offer it after creation.
+  slug      String   @unique @db.VarChar(64)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  // Soft delete. Organization removal cascades across every tenant table, so
+  // it is staged: marked here first, purged by a background job. Lets us
+  // honour "undo" within a grace window. See docs/database.md.
+  deletedAt DateTime?
+
+  memberships        OrganizationMembership[]
+  teams              Team[]
+  workspaces         Workspace[]
+  projects           Project[]
+  workItems          WorkItem[]
+  auditLogs          AuditLog[]
+  apiKeys            ApiKey[]
+  invitations        Invitation[]
+  projectMemberships ProjectMembership[]
+  teamMemberships    TeamMembership[]
+  settings           OrganizationSettings?
+
+  @@index([deletedAt])
+  @@map("organizations")
+}
+
+model OrganizationSettings {
+  organizationId String  @id @db.Uuid
+  // When true, an invitation is only accepted if its email domain matches one
+  // in allowedEmailDomains.
+  restrictEmailDomains Boolean  @default(false)
+  allowedEmailDomains  String[] @default([])
+  // Minutes of inactivity before a session is force-expired. Null = use the
+  // system default from SESSION_TTL_SECONDS.
+  sessionIdleTimeoutMinutes Int?
+  requireTwoFactor          Boolean @default(false)
+  updatedAt                 DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("organization_settings")
+}
+
+enum OrganizationRole {
+  OWNER
+  ADMIN
+  MEMBER
+  VIEWER
+}
+
+model OrganizationMembership {
+  id             String           @id @db.Uuid
+  organizationId String           @db.Uuid
+  userId         String           @db.Uuid
+  role           OrganizationRole
+  joinedAt       DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Back-relations for the composite FKs on TeamMembership and
+  // ProjectMembership. Those FKs target @@unique([organizationId, userId]) below,
+  // which is how the database guarantees you cannot add a non-member of the
+  // organization to one of its teams or projects.
+  teamMemberships    TeamMembership[]
+  projectMemberships ProjectMembership[]
+
+  // A user holds exactly one role per organization.
+  @@unique([organizationId, userId])
+  // "Which organizations does this user belong to?" — the organization
+  // switcher runs this on every authenticated page load.
+  @@index([userId])
+  @@index([organizationId, role])
+  @@map("organization_memberships")
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Teams
+// ═══════════════════════════════════════════════════════════════════════════
+
+model Team {
+  id             String   @id @db.Uuid
+  organizationId String   @db.Uuid
+  name           String   @db.VarChar(120)
+  slug           String   @db.VarChar(64)
+  description    String?  @db.VarChar(500)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  members      TeamMembership[]
+  projects     Project[]
+
+  // Slugs are unique per tenant, not globally — two organizations may both
+  // have a "platform" team.
+  @@unique([organizationId, slug])
+  // Target of the composite FK from Project, pinning a project's team to the
+  // same organization as the project.
+  @@unique([organizationId, id], name: "team_tenant_key")
+  @@index([organizationId, name])
+  @@map("teams")
+}
+
+enum TeamRole {
+  LEAD
+  MEMBER
+}
+
+model TeamMembership {
+  id             String   @id @db.Uuid
+  organizationId String   @db.Uuid
+  teamId         String   @db.Uuid
+  userId         String   @db.Uuid
+  role           TeamRole @default(MEMBER)
+  joinedAt       DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  // Composite FK: the team must live in this organization.
+  team         Team         @relation(fields: [organizationId, teamId], references: [organizationId, id], onDelete: Cascade)
+  // Composite FK: the user must already be a member of this organization.
+  // Without this, an admin could add an arbitrary user id to a team and give
+  // them an implicit foothold in the tenant.
+  membership   OrganizationMembership @relation(fields: [organizationId, userId], references: [organizationId, userId], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, userId])
+  @@index([organizationId, userId])
+  @@index([teamId])
+  @@map("team_memberships")
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Workspaces & Projects
+// ═══════════════════════════════════════════════════════════════════════════
+
+model Workspace {
+  id             String   @id @db.Uuid
+  organizationId String   @db.Uuid
+  name           String   @db.VarChar(120)
+  slug           String   @db.VarChar(64)
+  description    String?  @db.VarChar(500)
+  // Every organization gets one workspace at creation; it cannot be deleted
+  // while it is the default. Keeps "where do projects go?" answerable on day one.
+  isDefault      Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  projects     Project[]
+
+  @@unique([organizationId, slug])
+  @@unique([organizationId, id], name: "workspace_tenant_key")
+  @@index([organizationId])
+  @@map("workspaces")
+}
+
+enum ProjectStatus {
+  PLANNING
+  ACTIVE
+  PAUSED
+  COMPLETED
+  ARCHIVED
+}
+
+model Project {
+  id             String        @id @db.Uuid
+  organizationId String        @db.Uuid
+  workspaceId    String        @db.Uuid
+  teamId         String?       @db.Uuid
+  name           String        @db.VarChar(120)
+  // Short uppercase identifier used in work-item references: PORTAL-42.
+  key            String        @db.VarChar(10)
+  description    String?       @db.VarChar(2000)
+  status         ProjectStatus @default(PLANNING)
+  // Monotonic counter for per-project work-item numbering. Incremented inside
+  // the same transaction that inserts the work item, so numbers are gapless
+  // under concurrency. A sequence would be simpler but is global, and
+  // per-project sequences would mean DDL on every project creation.
+  workItemCounter Int          @default(0)
+  archivedAt     DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  workspace    Workspace    @relation(fields: [organizationId, workspaceId], references: [organizationId, id], onDelete: Cascade)
+  // Restrict, not SetNull. A composite FK's SET NULL nulls *every* column in
+  // the key, which would blank the NOT NULL organizationId and detach the row
+  // from its tenant. Postgres would reject that at runtime, so the constraint
+  // is declared Restrict and TeamsService.delete() unassigns projects inside
+  // the deletion transaction instead. See docs/database.md § cascade behaviour.
+  team         Team?        @relation(fields: [organizationId, teamId], references: [organizationId, id], onDelete: Restrict)
+
+  members   ProjectMembership[]
+  workItems WorkItem[]
+
+  @@unique([organizationId, key])
+  @@unique([organizationId, id], name: "project_tenant_key")
+  // Primary list query: projects in an org filtered by status, newest first.
+  @@index([organizationId, status, createdAt])
+  @@index([organizationId, workspaceId])
+  @@index([organizationId, teamId])
+  @@map("projects")
+}
+
+enum ProjectRole {
+  MAINTAINER
+  CONTRIBUTOR
+  OBSERVER
+}
+
+model ProjectMembership {
+  id             String      @id @db.Uuid
+  organizationId String      @db.Uuid
+  projectId      String      @db.Uuid
+  userId         String      @db.Uuid
+  role           ProjectRole @default(CONTRIBUTOR)
+  addedAt        DateTime    @default(now())
+
+  organization Organization           @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  project      Project                @relation(fields: [organizationId, projectId], references: [organizationId, id], onDelete: Cascade)
+  membership   OrganizationMembership @relation(fields: [organizationId, userId], references: [organizationId, userId], onDelete: Cascade)
+  user         User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId])
+  @@index([organizationId, userId])
+  @@index([projectId])
+  @@map("project_memberships")
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Work items
+// ═══════════════════════════════════════════════════════════════════════════
+
+enum WorkItemType {
+  TASK
+  ISSUE
+  BUG
+  IMPROVEMENT
+}
+
+enum WorkItemStatus {
+  BACKLOG
+  TODO
+  IN_PROGRESS
+  IN_REVIEW
+  DONE
+  CANCELLED
+}
+
+enum WorkItemPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+model WorkItem {
+  id             String           @id @db.Uuid
+  organizationId String           @db.Uuid
+  projectId      String           @db.Uuid
+  // Per-project sequence; rendered as {project.key}-{number}.
+  number         Int
+  title          String           @db.VarChar(300)
+  description    String?          @db.Text
+  type           WorkItemType     @default(TASK)
+  status         WorkItemStatus   @default(BACKLOG)
+  priority       WorkItemPriority @default(MEDIUM)
+  assigneeId     String?          @db.Uuid
+  reporterId     String?          @db.Uuid
+  dueDate        DateTime?        @db.Date
+  completedAt    DateTime?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  project      Project      @relation(fields: [organizationId, projectId], references: [organizationId, id], onDelete: Cascade)
+  // SetNull rather than Cascade: removing someone from the organization must
+  // not delete the work they filed or were assigned.
+  assignee     User?        @relation("WorkItemAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  reporter     User?        @relation("WorkItemReporter", fields: [reporterId], references: [id], onDelete: SetNull)
+
+  @@unique([projectId, number])
+  // Board and list views: items in a project by status.
+  @@index([organizationId, projectId, status])
+  // "My work" across the whole organization.
+  @@index([organizationId, assigneeId, status])
+  // Default ordering for the org-wide work item list.
+  @@index([organizationId, updatedAt])
+  @@index([organizationId, status, priority])
+  @@map("work_items")
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Audit
+// ═══════════════════════════════════════════════════════════════════════════
+
+model AuditLog {
+  id             String   @id @db.Uuid
+  organizationId String   @db.Uuid
+  // Null for system-originated events (scheduled jobs, cleanup).
+  actorId        String?  @db.Uuid
+  // Dotted action name, e.g. "member.role_changed". Kept as a string rather
+  // than an enum: audit history must survive the removal of an action from
+  // the codebase, and an enum migration would rewrite historical rows.
+  action         String   @db.VarChar(80)
+  resourceType   String   @db.VarChar(40)
+  resourceId     String?  @db.Uuid
+  // Action-specific context. Written through the audit service, which strips
+  // secrets before serialising — see AuditService.record().
+  metadata       Json     @default("{}")
+  ipAddress      String?  @db.VarChar(45)
+  userAgent      String?  @db.VarChar(512)
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  actor        User?        @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  // Audit logs are read newest-first and paginated by cursor. `(organizationId,
+  // id DESC)` serves that directly because UUIDv7 sorts chronologically, which
+  // is precisely why the identifier strategy matters here.
+  @@index([organizationId, id(sort: Desc)])
+  @@index([organizationId, action, createdAt])
+  @@index([organizationId, actorId, createdAt])
+  @@index([organizationId, resourceType, resourceId])
+  @@map("audit_logs")
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// API credentials
+// ═══════════════════════════════════════════════════════════════════════════
+
+model ApiKey {
+  id             String    @id @db.Uuid
+  organizationId String    @db.Uuid
+  name           String    @db.VarChar(120)
+  // Displayed in the UI so a key is recognisable after creation:
+  // "atlas_live_7f3a…". Not a secret.
+  keyPrefix      String    @db.VarChar(24)
+  // SHA-256 of (raw key + server pepper). Never the raw key. Unique so a
+  // lookup is a single indexed equality probe rather than a table scan.
+  keyHash        String    @unique @db.Char(64)
+  createdById    String?   @db.Uuid
+  lastUsedAt     DateTime?
+  expiresAt      DateTime?
+  revokedAt      DateTime?
+  createdAt      DateTime  @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdBy    User?        @relation("ApiKeyCreator", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, createdAt])
+  @@map("api_keys")
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Invitations
+// ═══════════════════════════════════════════════════════════════════════════
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  REVOKED
+  EXPIRED
+}
+
+model Invitation {
+  id             String           @id @db.Uuid
+  organizationId String           @db.Uuid
+  email          String           @db.VarChar(320)
+  role           OrganizationRole
+  invitedById    String?          @db.Uuid
+  // SHA-256 of the raw invitation token, same reasoning as sessions: the raw
+  // token exists only in the emailed link.
+  tokenHash      String           @unique @db.Char(64)
+  status         InvitationStatus @default(PENDING)
+  expiresAt      DateTime
+  acceptedAt     DateTime?
+  revokedAt      DateTime?
+  createdAt      DateTime         @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  invitedBy    User?        @relation("InvitationInviter", fields: [invitedById], references: [id], onDelete: SetNull)
+
+  // At most one live invitation per email per organization. Partial unique
+  // index (status = 'PENDING') is applied in a follow-up migration, since
+  // Prisma cannot express partial indexes declaratively — see
+  // migrations/*_partial_unique_pending_invitation.
+  @@index([organizationId, status, createdAt])
+  @@index([email])
+  @@map("invitations")
+}
