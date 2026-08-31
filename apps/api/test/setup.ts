@@ -21,3 +21,6 @@ process.env.NODE_ENV = 'test';
 // Keep test output readable; the application logger is otherwise very chatty.
 process.env.LOG_LEVEL = 'error';
 process.env.LOG_FORMAT = 'json';
+// Console transport: invitation emails are captured in memory so specs can
+// read the token, with no SMTP socket and no dependency on Mailpit running.
+process.env.EMAIL_TRANSPORT = 'console';

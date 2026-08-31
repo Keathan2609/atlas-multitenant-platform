@@ -13,6 +13,12 @@ import { WorkspacesModule } from './modules/workspaces/workspaces.module.js';
 import { TeamsModule } from './modules/teams/teams.module.js';
 import { ProjectsModule } from './modules/projects/projects.module.js';
 import { WorkItemsModule } from './modules/work-items/work-items.module.js';
+import { EmailModule } from './common/email/email.module.js';
+import { ApiKeysModule } from './modules/api-keys/api-keys.module.js';
+import { ApiKeyGuard } from './modules/api-keys/api-key.guard.js';
+import { InvitationsModule } from './modules/invitations/invitations.module.js';
+import { AuditLogModule } from './modules/audit/audit-log.module.js';
+import { SettingsModule } from './modules/settings/settings.module.js';
 
 @Module({
   imports: [
@@ -26,14 +32,23 @@ import { WorkItemsModule } from './modules/work-items/work-items.module.js';
     TeamsModule,
     ProjectsModule,
     WorkItemsModule,
+    EmailModule,
+    ApiKeysModule,
+    InvitationsModule,
+    AuditLogModule,
+    SettingsModule,
   ],
   providers: [
     // Global filter: every error leaves through one place, so no handler can
     // accidentally return an unshaped body or leak an internal message.
     { provide: APP_FILTER, useClass: AllExceptionsFilter },
-    // Global guard: routes are authenticated by default and must opt out with
-    // @Public(). Forgetting a decorator locks a route down rather than
-    // exposing it.
+    // Guard order is load-bearing. ApiKeyGuard runs first and populates
+    // request.apiKeyContext; AuthGuard's first act is to check that field and
+    // skip cookie handling when it is set. Reversed, every API-key request
+    // would be rejected as anonymous before the key was ever examined.
+    { provide: APP_GUARD, useClass: ApiKeyGuard },
+    // Routes are authenticated by default and must opt out with @Public().
+    // Forgetting a decorator locks a route down rather than exposing it.
     { provide: APP_GUARD, useClass: AuthGuard },
   ],
 })

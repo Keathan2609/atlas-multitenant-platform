@@ -10,6 +10,7 @@ import { createPrismaClient, type PrismaClient } from '@atlas/database';
 import { AppModule } from '../src/app.module.js';
 import { RedisService } from '../src/common/redis/redis.service.js';
 import { CONFIG_TOKEN, type AppConfig } from '../src/config/env.js';
+import { EmailService } from '../src/common/email/email.service.js';
 
 /**
  * Integration test harness.
@@ -30,6 +31,8 @@ export interface TestContext {
   app: INestApplication;
   prisma: PrismaClient;
   redis: RedisService;
+  /** Console transport under test, so specs can read what was 'sent'. */
+  email: EmailService;
   /** Supertest agent bound to the running app. */
   http: () => request.Agent;
 }
@@ -86,6 +89,7 @@ export async function createTestContext(): Promise<TestContext> {
     app,
     prisma,
     redis: app.get(RedisService),
+    email: app.get(EmailService),
     http: () => request.agent(app.getHttpServer()),
   };
 }
@@ -130,6 +134,21 @@ export async function resetRateLimits(redis: RedisService): Promise<void> {
 export async function resetState(ctx: TestContext): Promise<void> {
   await resetDatabase(ctx.prisma);
   await resetRateLimits(ctx.redis);
+  ctx.email.clearSent();
+}
+
+/**
+ * Pulls the raw invitation token out of the most recent email.
+ *
+ * The token is never persisted in the clear and never returned by the API,
+ * so the email is the only place a test can obtain it — which is exactly the
+ * property being asserted.
+ */
+export function lastInvitationToken(ctx: TestContext): string {
+  const last = ctx.email.sent[ctx.email.sent.length - 1];
+  const match = /\/invitations\/([A-Za-z0-9_-]+)/.exec(last?.text ?? '');
+  if (!match?.[1]) throw new Error('No invitation link found in the sent email');
+  return match[1];
 }
 
 export async function destroyTestContext(ctx: TestContext): Promise<void> {
