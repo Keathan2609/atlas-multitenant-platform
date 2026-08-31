@@ -1,0 +1,74 @@
+# Local development infrastructure for ATLAS.
+#
+# This file provisions backing services only — Postgres, Redis, and a mail
+# sink. The API and web app normally run on the host via `pnpm dev` for fast
+# reloads. To run the full stack in containers instead, add the app profile:
+#   docker compose -f infrastructure/docker-compose.yml --profile apps up
+#
+# Ports are deliberately offset from the service defaults (5434, 6380) so this
+# stack coexists with any Postgres or Redis already running on the host.
+
+name: atlas
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: atlas-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: atlas
+      POSTGRES_PASSWORD: atlas_local_dev
+      POSTGRES_DB: atlas
+      # Deterministic collation keeps ORDER BY results identical across the
+      # developer machines and CI runners that share these fixtures.
+      POSTGRES_INITDB_ARGS: '--locale=C --encoding=UTF8'
+    ports:
+      - '5434:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      # `pg_isready` alone returns healthy while the init scripts are still
+      # running; querying a table forces a real connection through the auth path.
+      test: ['CMD-SHELL', 'pg_isready -U atlas -d atlas && psql -U atlas -d atlas -c "SELECT 1" > /dev/null']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  redis:
+    image: redis:7-alpine
+    container_name: atlas-redis
+    restart: unless-stopped
+    # No persistence: everything ATLAS puts in Redis (rate-limit counters,
+    # session cache, short-lived locks) is reconstructible. Losing it on
+    # restart is correct behaviour, not data loss.
+    command: redis-server --save "" --appendonly no --maxmemory 256mb --maxmemory-policy allkeys-lru
+    ports:
+      - '6380:6379'
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: atlas-mailpit
+    restart: unless-stopped
+    environment:
+      MP_MAX_MESSAGES: 500
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+    ports:
+      - '1025:1025' # SMTP — the API sends here
+      - '8025:8025' # Web UI — open http://localhost:8025 to read invitations
+    healthcheck:
+      test: ['CMD', 'sh', '-c', 'nc -z localhost 1025 || exit 1']
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  postgres_data:
+    name: atlas_postgres_data

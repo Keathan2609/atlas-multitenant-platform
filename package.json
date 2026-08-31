@@ -1,0 +1,49 @@
+{
+  "name": "atlas-multitenant-platform",
+  "version": "0.1.0",
+  "private": true,
+  "description": "ATLAS \u2014 operations infrastructure for modern teams. A production-oriented multi-tenant SaaS platform.",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.11.0",
+    "pnpm": ">=10.0.0"
+  },
+  "packageManager": "pnpm@10.34.5",
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "test:integration": "turbo run test:integration",
+    "test:e2e": "pnpm --filter @atlas/web test:e2e",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,yml,yaml}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,yml,yaml}\"",
+    "db:generate": "pnpm --filter @atlas/database generate",
+    "db:migrate": "pnpm --filter @atlas/database migrate",
+    "db:migrate:deploy": "pnpm --filter @atlas/database migrate:deploy",
+    "db:seed": "pnpm --filter @atlas/database seed",
+    "db:reset": "pnpm --filter @atlas/database reset",
+    "db:studio": "pnpm --filter @atlas/database studio",
+    "infra:up": "docker compose -f infrastructure/docker-compose.yml up -d",
+    "infra:down": "docker compose -f infrastructure/docker-compose.yml down",
+    "infra:logs": "docker compose -f infrastructure/docker-compose.yml logs -f",
+    "infra:nuke": "docker compose -f infrastructure/docker-compose.yml down -v",
+    "clean": "turbo run clean && rimraf node_modules"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "prettier": "^3.4.2",
+    "rimraf": "^6.0.1",
+    "turbo": "^2.3.3",
+    "typescript": "^5.7.3"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@prisma/client",
+      "@prisma/engines",
+      "esbuild",
+      "prisma"
+    ]
+  }
+}

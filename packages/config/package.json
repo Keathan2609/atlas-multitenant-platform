@@ -1,0 +1,17 @@
+{
+  "name": "@atlas/config",
+  "version": "0.1.0",
+  "private": true,
+  "files": ["typescript", "eslint"],
+  "exports": {
+    "./typescript/*": "./typescript/*",
+    "./eslint/*": "./eslint/*"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.18.0",
+    "eslint": "^9.18.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-import": "^2.31.0",
+    "typescript-eslint": "^8.20.0"
+  }
+}
