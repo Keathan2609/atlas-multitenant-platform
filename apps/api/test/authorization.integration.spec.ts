@@ -211,18 +211,52 @@ describe('privilege escalation attempts', () => {
     expect(denied.body.error.code).toBe('CANNOT_MODIFY_SELF');
   });
 
-  it('ignores a role smuggled in the request body of another endpoint', async () => {
-    // Mass assignment: the update-organization schema is .strict(), so an
-    // extra `role` is rejected outright rather than reaching a service that
-    // might spread it into an update.
+  it('rejects an unauthorised caller before it parses their body at all', async () => {
+    // Nest runs guards before pipes, so a MEMBER lacking organization.update
+    // is refused at the guard and the smuggled `role` never reaches
+    // validation. That ordering is the desirable one — an unauthorised caller
+    // should not get their payload parsed — so the assertion is 403, not 422.
     const org = await createOrg();
     const member = await addMember(org, 'MEMBER', 'member');
 
-    await member.agent
+    const denied = await member.agent
       .patch(`/api/v1/organizations/${org.slug}`)
       .set('x-csrf-token', member.csrfToken)
       .send({ name: 'x', role: 'OWNER' })
+      .expect(403);
+
+    expect(denied.body.error.code).toBe('INSUFFICIENT_PERMISSIONS');
+
+    const unchanged = await ctx.prisma.organizationMembership.findFirstOrThrow({
+      where: { organizationId: org.orgId, userId: member.userId },
+    });
+    expect(unchanged.role).toBe('MEMBER');
+  });
+
+  it('rejects a smuggled role even from a caller authorised for the endpoint', async () => {
+    // The mass-assignment defence proper. The OWNER *is* permitted to PATCH
+    // the organization, so the request reaches validation — and .strict()
+    // rejects the unknown `role` key rather than dropping it silently for
+    // some later Object.assign to pick up.
+    const org = await createOrg();
+
+    const rejected = await org.owner.agent
+      .patch(`/api/v1/organizations/${org.slug}`)
+      .set('x-csrf-token', org.owner.csrfToken)
+      .send({ name: 'Renamed', role: 'VIEWER' })
       .expect(422);
+
+    expect(rejected.body.error.code).toBe('VALIDATION_FAILED');
+
+    // Neither the smuggled field nor the legitimate one was applied — the
+    // request was rejected whole.
+    const org_ = await ctx.prisma.organization.findUniqueOrThrow({ where: { id: org.orgId } });
+    expect(org_.name).toBe('Northstar Systems');
+
+    const ownerMembership = await ctx.prisma.organizationMembership.findFirstOrThrow({
+      where: { organizationId: org.orgId, userId: org.owner.userId },
+    });
+    expect(ownerMembership.role).toBe('OWNER');
   });
 });
 
