@@ -9,9 +9,24 @@ import { HealthModule } from './modules/health/health.module.js';
 import { AuditModule } from './common/audit/audit.module.js';
 import { OrganizationsModule } from './modules/organizations/organizations.module.js';
 import { MembersModule } from './modules/members/members.module.js';
+import { WorkspacesModule } from './modules/workspaces/workspaces.module.js';
+import { TeamsModule } from './modules/teams/teams.module.js';
+import { ProjectsModule } from './modules/projects/projects.module.js';
+import { WorkItemsModule } from './modules/work-items/work-items.module.js';
 
 @Module({
-  imports: [CommonModule, AuditModule, AuthModule, HealthModule, OrganizationsModule, MembersModule],
+  imports: [
+    CommonModule,
+    AuditModule,
+    AuthModule,
+    HealthModule,
+    OrganizationsModule,
+    MembersModule,
+    WorkspacesModule,
+    TeamsModule,
+    ProjectsModule,
+    WorkItemsModule,
+  ],
   providers: [
     // Global filter: every error leaves through one place, so no handler can
     // accidentally return an unshaped body or leak an internal message.
