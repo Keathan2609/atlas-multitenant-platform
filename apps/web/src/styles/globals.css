@@ -1,0 +1,283 @@
+@import 'tailwindcss';
+
+/*
+ * ATLAS design tokens.
+ *
+ * The whole system is here. Components consume these names and never hard-code
+ * a colour, so a change to the palette is one edit rather than a grep.
+ *
+ * Two rules govern the palette, and most of the visual discipline follows from
+ * them:
+ *
+ *  1. The accent is reserved for *interactive affordance* — links, focus,
+ *     the primary action, the active nav item. Nothing decorative uses it.
+ *  2. Status uses neutrals and semantics, never the accent. That separation is
+ *     what stops an application looking like a brand deck: when everything is
+ *     accent-coloured, the accent stops meaning "you can act on this".
+ *
+ * Borders do the work shadows would. Elevation is reserved for things that
+ * genuinely float above the page — menus and dialogs — and is never used to
+ * separate two areas that sit flat next to each other.
+ */
+
+@theme {
+  /* ── Canvas and surfaces ───────────────────────────────────────────────── */
+  /* Cool near-white rather than pure white or cream. Pure white makes hairline
+     borders disappear on cheap panels; cream reads as editorial, not tooling. */
+  --color-canvas: #fbfbfc;
+  --color-surface: #ffffff;
+  --color-surface-raised: #ffffff;
+  /* For table header rows and inset panels — a half-step, not a box. */
+  --color-surface-sunken: #f6f7f8;
+  --color-surface-hover: #f2f3f5;
+  --color-surface-active: #eceef1;
+
+  /* ── Borders ───────────────────────────────────────────────────────────── */
+  --color-border: #e3e4e8;
+  --color-border-strong: #d0d2d8;
+  --color-border-subtle: #edeef1;
+
+  /* ── Text ──────────────────────────────────────────────────────────────── */
+  --color-fg: #16181b;
+  --color-fg-secondary: #5c6169;
+  --color-fg-tertiary: #868c95;
+  --color-fg-inverted: #ffffff;
+
+  /* ── Accent: cobalt. Interactive affordance only. ──────────────────────── */
+  --color-accent: #2354d6;
+  --color-accent-hover: #1c46b8;
+  --color-accent-active: #17399a;
+  --color-accent-subtle: #eef2fd;
+  --color-accent-border: #c3d2f7;
+
+  /* ── Semantics. Status only — never interactive. ───────────────────────── */
+  --color-danger: #b4232a;
+  --color-danger-hover: #9a1d23;
+  --color-danger-subtle: #fdf0f0;
+  --color-danger-border: #f2c9c9;
+
+  --color-warning: #9a6400;
+  --color-warning-subtle: #fdf6e8;
+  --color-warning-border: #edd9ab;
+
+  --color-success: #1d7a45;
+  --color-success-subtle: #eef7f1;
+  --color-success-border: #bfe0cc;
+
+  /* ── Radii. Small and few. ─────────────────────────────────────────────── */
+  --radius-sm: 3px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
+
+  /* ── Type ──────────────────────────────────────────────────────────────── */
+  --font-sans:
+    var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  /* Machine-readable values only: references, keys, ids, exact timestamps. */
+  --font-mono: var(--font-jetbrains), ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+
+  /* Compact scale. Nothing in the authenticated app exceeds --text-xl (20px):
+     an application is not a landing page and a large heading in a dense tool
+     wastes the row it sits in. */
+  --text-2xs: 0.6875rem; /* 11px — column headers, eyebrows, metadata */
+  --text-xs: 0.75rem; /* 12px — secondary metadata */
+  --text-sm: 0.8125rem; /* 13px — the workhorse: table cells, body */
+  --text-base: 0.875rem; /* 14px — inputs, primary reading */
+  --text-md: 0.9375rem; /* 15px — section headings */
+  --text-lg: 1rem; /* 16px — page titles */
+  --text-xl: 1.25rem; /* 20px — the ceiling */
+
+  /* ── Elevation. Menus and dialogs only. ────────────────────────────────── */
+  --shadow-menu: 0 1px 2px rgb(16 18 21 / 0.04), 0 4px 12px rgb(16 18 21 / 0.08);
+  --shadow-dialog: 0 8px 32px rgb(16 18 21 / 0.16);
+
+  /* ── Layout constants ──────────────────────────────────────────────────── */
+  --spacing-sidebar: 216px;
+  --spacing-header: 48px;
+}
+
+/*
+ * Dark theme.
+ *
+ * Not an inversion. The canvas is a warm-neutral near-black rather than pure
+ * black so hairlines remain visible, and the accent is lightened because
+ * cobalt at #2354D6 fails contrast against a dark ground.
+ */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --color-canvas: #0e0f11;
+    --color-surface: #16181b;
+    --color-surface-raised: #1b1e22;
+    --color-surface-sunken: #131518;
+    --color-surface-hover: #1f2227;
+    --color-surface-active: #262a30;
+
+    --color-border: #282c32;
+    --color-border-strong: #383d45;
+    --color-border-subtle: #1f2227;
+
+    --color-fg: #e8eaed;
+    --color-fg-secondary: #9aa1ab;
+    --color-fg-tertiary: #6b727c;
+    --color-fg-inverted: #0e0f11;
+
+    --color-accent: #6b95f5;
+    --color-accent-hover: #85a8f8;
+    --color-accent-active: #9bb7fa;
+    --color-accent-subtle: #16203a;
+    --color-accent-border: #2c4478;
+
+    --color-danger: #f08a8f;
+    --color-danger-hover: #f5a3a7;
+    --color-danger-subtle: #2a1618;
+    --color-danger-border: #55292c;
+
+    --color-warning: #e0b055;
+    --color-warning-subtle: #261e0e;
+    --color-warning-border: #4d3d1c;
+
+    --color-success: #62c48c;
+    --color-success-subtle: #10241a;
+    --color-success-border: #234832;
+
+    --shadow-menu: 0 1px 2px rgb(0 0 0 / 0.4), 0 4px 12px rgb(0 0 0 / 0.5);
+    --shadow-dialog: 0 8px 32px rgb(0 0 0 / 0.6);
+  }
+}
+
+[data-theme='dark'] {
+  --color-canvas: #0e0f11;
+  --color-surface: #16181b;
+  --color-surface-raised: #1b1e22;
+  --color-surface-sunken: #131518;
+  --color-surface-hover: #1f2227;
+  --color-surface-active: #262a30;
+  --color-border: #282c32;
+  --color-border-strong: #383d45;
+  --color-border-subtle: #1f2227;
+  --color-fg: #e8eaed;
+  --color-fg-secondary: #9aa1ab;
+  --color-fg-tertiary: #6b727c;
+  --color-fg-inverted: #0e0f11;
+  --color-accent: #6b95f5;
+  --color-accent-hover: #85a8f8;
+  --color-accent-active: #9bb7fa;
+  --color-accent-subtle: #16203a;
+  --color-accent-border: #2c4478;
+  --color-danger: #f08a8f;
+  --color-danger-hover: #f5a3a7;
+  --color-danger-subtle: #2a1618;
+  --color-danger-border: #55292c;
+  --color-warning: #e0b055;
+  --color-warning-subtle: #261e0e;
+  --color-warning-border: #4d3d1c;
+  --color-success: #62c48c;
+  --color-success-subtle: #10241a;
+  --color-success-border: #234832;
+  --shadow-menu: 0 1px 2px rgb(0 0 0 / 0.4), 0 4px 12px rgb(0 0 0 / 0.5);
+  --shadow-dialog: 0 8px 32px rgb(0 0 0 / 0.6);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  html {
+    /* Prevents the layout shifting sideways when a dialog locks scroll. */
+    scrollbar-gutter: stable;
+  }
+
+  body {
+    background-color: var(--color-canvas);
+    color: var(--color-fg);
+    font-family: var(--font-sans);
+    font-size: var(--text-sm);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /*
+   * Tabular figures everywhere by default.
+   *
+   * In a table of counts and dates, proportional digits make columns ripple as
+   * values change. This is the single highest-value typographic setting in an
+   * application like this one.
+   */
+  body {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /*
+   * One focus treatment for the entire application.
+   *
+   * :focus-visible rather than :focus, so a mouse click does not leave a ring
+   * behind, but every keyboard path shows one. The offset keeps the ring clear
+   * of the element's own border so it reads on both light and dark grounds.
+   */
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+
+  /* Removes the ring only where the component draws its own. */
+  [data-focus-styled]:focus-visible {
+    outline: none;
+  }
+
+  ::selection {
+    background-color: var(--color-accent-subtle);
+  }
+}
+
+@layer utilities {
+  /*
+   * The reference: IDENT-3, PORTAL-12, atlas_live_7f3a.
+   *
+   * This is the application's signature. It is how engineers refer to work out
+   * loud and in writing, so it is treated as the identity of a row or a page —
+   * fixed-width, slightly tightened, and never wrapped.
+   */
+  .reference {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+  }
+
+  /* Column headers and eyebrows. */
+  .label-caps {
+    font-size: var(--text-2xs);
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--color-fg-tertiary);
+  }
+
+  /* Truncation that still allows the flex parent to shrink. */
+  .truncate-cell {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+/*
+ * Reduced motion.
+ *
+ * The application uses very little motion to begin with — menu and dialog
+ * transitions only — but honouring the preference is not optional, and a
+ * blanket rule is more reliable than remembering it per component.
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
