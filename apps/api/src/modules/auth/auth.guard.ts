@@ -47,7 +47,11 @@ export class AuthGuard implements CanActivate {
       return true;
     }
 
-    const token = request.cookies?.[SESSION_COOKIE] as string | undefined;
+    // signedCookies, not cookies: cookie-parser puts a cookie here only when
+    // its signature verifies, so a forged or tampered value never reaches the
+    // session lookup. It arrives as `false` when the signature fails.
+    const signed = request.signedCookies?.[SESSION_COOKIE] as string | false | undefined;
+    const token = typeof signed === 'string' ? signed : undefined;
 
     if (!token) {
       if (isPublic) return true;

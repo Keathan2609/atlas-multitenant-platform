@@ -26,13 +26,22 @@ async function bootstrap(): Promise<void> {
   const logger = app.get<Logger>(LOGGER_TOKEN);
 
   /**
-   * Trust exactly one proxy hop.
+   * Trust exactly as many proxy hops as are actually deployed.
    *
-   * `true` would trust the entire X-Forwarded-For chain, letting any client
-   * prepend a fake address and hand itself a fresh rate-limit bucket on every
-   * request. `1` trusts only the hop we actually deploy behind.
+   * Driven by TRUST_PROXY and defaulting to 0, because the failure is silent
+   * and one-directional: trusting a hop that does not exist lets any client
+   * supply its own X-Forwarded-For, and Express then reports that value as
+   * req.ip. req.ip is the login rate-limit bucket key and the address stored
+   * on sessions and audit entries, so an over-trusting setting converts a
+   * bounded brute-force budget into an unlimited one and lets an attacker
+   * write a false origin into the audit trail.
+   *
+   * Verified before this was fixed: after the login budget returned 429,
+   * three forged X-Forwarded-For values each restored a fresh budget.
+   *
+   * Deployments behind a load balancer set TRUST_PROXY to the hop count.
    */
-  app.set('trust proxy', 1);
+  app.set('trust proxy', config.TRUST_PROXY);
 
   app.use(
     helmet({
@@ -50,7 +59,9 @@ async function bootstrap(): Promise<void> {
     }),
   );
 
-  app.use(cookieParser());
+  // The secret enables signed cookies; see modules/auth/cookies.ts for what
+  // signing does and does not buy here.
+  app.use(cookieParser(config.SESSION_SECRET));
 
   /**
    * CORS with credentials.

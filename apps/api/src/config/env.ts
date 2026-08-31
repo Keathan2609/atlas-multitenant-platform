@@ -33,6 +33,22 @@ export const envSchema = z
     API_PORT: z.coerce.number().int().min(1).max(65535).default(4000),
     API_HOST: z.string().default('0.0.0.0'),
 
+    /**
+     * Number of reverse-proxy hops in front of this instance.
+     *
+     * 0 means the API is reached directly and X-Forwarded-For must not be
+     * believed. Any non-zero value tells Express to read the client address
+     * out of that header, so it MUST match the real deployment: if the API is
+     * directly reachable and this is 1, any client can set X-Forwarded-For to
+     * whatever it likes and Express reports that as req.ip.
+     *
+     * That is not cosmetic. req.ip is the bucket key for login throttling and
+     * the address recorded on sessions and audit entries, so an over-trusting
+     * value hands an attacker unlimited login attempts and lets them forge the
+     * origin of their own audit trail.
+     */
+    TRUST_PROXY: z.coerce.number().int().min(0).max(10).default(0),
+
     // Comma-separated. Parsed into an array below; an empty list means no
     // browser origin may send credentialed requests, which is the safe default
     // for a misconfiguration.

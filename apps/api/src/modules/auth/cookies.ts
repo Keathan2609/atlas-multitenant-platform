@@ -21,6 +21,14 @@ export const CSRF_HEADER = 'x-csrf-token';
  *
  * No `domain` is set, so the cookie stays host-only. Setting a parent domain
  * would share it with every subdomain, including anything else deployed there.
+ *
+ * `signed` uses SESSION_SECRET. The token is already 256 bits of CSPRNG output
+ * verified by a hash lookup, so signing adds no meaningful guessing resistance
+ * — what it buys is that a tampered or fabricated cookie is rejected by
+ * cookie-parser before it reaches Redis or Postgres, and that SESSION_SECRET
+ * does what the environment contract says it does. An unused secret that is
+ * documented as protecting something is worse than no secret at all, because
+ * it invites the reader to assume a property that does not hold.
  */
 export function sessionCookieOptions(config: AppConfig, maxAgeSeconds: number): CookieOptions {
   return {
@@ -29,11 +37,15 @@ export function sessionCookieOptions(config: AppConfig, maxAgeSeconds: number): 
     sameSite: 'lax',
     path: '/',
     maxAge: maxAgeSeconds * 1000,
+    signed: true,
   };
 }
 
 /**
- * The CSRF cookie is deliberately NOT httpOnly.
+ * The CSRF cookie is deliberately NOT httpOnly, and deliberately not signed:
+ * client code has to read it to build the matching header, and a signature
+ * wrapper would just be one more thing for that code to strip.
+ *
  *
  * This is the double-submit pattern: the browser holds a random value the
  * client-side code reads and echoes back in a header. A cross-site attacker

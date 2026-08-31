@@ -9,6 +9,7 @@ import request from 'supertest';
 import { createPrismaClient, type PrismaClient } from '@atlas/database';
 import { AppModule } from '../src/app.module.js';
 import { RedisService } from '../src/common/redis/redis.service.js';
+import { CONFIG_TOKEN, type AppConfig } from '../src/config/env.js';
 
 /**
  * Integration test harness.
@@ -66,10 +67,16 @@ export async function createTestContext(): Promise<TestContext> {
   }).compile();
 
   const app = moduleRef.createNestApplication<NestExpressApplication>({ logger: false });
-  app.use(cookieParser());
+  const config = app.get<AppConfig>(CONFIG_TOKEN);
+  // Must mirror main.ts: without the same secret, cookie-parser cannot verify
+  // the signed session cookie and every authenticated test would 401.
+  app.use(cookieParser(process.env.SESSION_SECRET));
   app.setGlobalPrefix('api');
   app.enableVersioning({ type: VersioningType.URI, defaultVersion: '1' });
-  app.set('trust proxy', 1);
+  // Read from config rather than hard-coded, for the same reason main.ts does:
+  // a hard-coded 1 here would make the proxy-trust regression tests pass
+  // against a setting production does not use.
+  app.set('trust proxy', config.TRUST_PROXY);
   await app.init();
 
   const prisma = createPrismaClient({ databaseUrl });
