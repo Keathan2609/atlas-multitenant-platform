@@ -5,23 +5,23 @@ not implementation details, and belong in a later phase.
 
 ## Required surfaces (15)
 
-| # | Surface | Route | Status |
-|---|---------|-------|--------|
-| 1 | Sign in | `/sign-in` | Built |
-| 2 | Sign up | `/sign-up` | Built |
-| 3 | Organization picker | `/organizations` | Built |
-| 4 | Onboarding (create organization) | `/onboarding` | Built |
-| 5 | Overview | `/app/[orgSlug]` | Built |
-| 6 | Projects | `/app/[orgSlug]/projects` | Built |
-| 7 | Project detail | `/app/[orgSlug]/projects/[projectId]` | Built |
-| 8 | Work items | `/app/[orgSlug]/work-items` | Built |
-| 9 | Teams | `/app/[orgSlug]/teams` | Built |
-| 10 | Workspaces | `/app/[orgSlug]/workspaces` | Built |
-| 11 | Members + invitations | `/app/[orgSlug]/members` | Built |
-| 12 | Activity (audit log) | `/app/[orgSlug]/activity` | Built |
-| 13 | API keys | `/app/[orgSlug]/api-keys` | Built |
-| 14 | Organization settings | `/app/[orgSlug]/settings` | Built |
-| 15 | User profile | `/profile` | Built |
+| #   | Surface                          | Route                                 | Status |
+| --- | -------------------------------- | ------------------------------------- | ------ |
+| 1   | Sign in                          | `/sign-in`                            | Built  |
+| 2   | Sign up                          | `/sign-up`                            | Built  |
+| 3   | Organization picker              | `/organizations`                      | Built  |
+| 4   | Onboarding (create organization) | `/onboarding`                         | Built  |
+| 5   | Overview                         | `/app/[orgSlug]`                      | Built  |
+| 6   | Projects                         | `/app/[orgSlug]/projects`             | Built  |
+| 7   | Project detail                   | `/app/[orgSlug]/projects/[projectId]` | Built  |
+| 8   | Work items                       | `/app/[orgSlug]/work-items`           | Built  |
+| 9   | Teams                            | `/app/[orgSlug]/teams`                | Built  |
+| 10  | Workspaces                       | `/app/[orgSlug]/workspaces`           | Built  |
+| 11  | Members + invitations            | `/app/[orgSlug]/members`              | Built  |
+| 12  | Activity (audit log)             | `/app/[orgSlug]/activity`             | Built  |
+| 13  | API keys                         | `/app/[orgSlug]/api-keys`             | Built  |
+| 14  | Organization settings            | `/app/[orgSlug]/settings`             | Built  |
+| 15  | User profile                     | `/profile`                            | Built  |
 
 Invitations is deliberately a section of Members (11) rather than its own
 route. A pending invitation is a prospective member; splitting them across two
