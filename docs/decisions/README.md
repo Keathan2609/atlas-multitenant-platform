@@ -18,3 +18,6 @@ imagine revisiting is a belief, not a decision.
 | [0004](./0004-uuidv7-identifiers.md)            | UUIDv7 primary keys generated in the application            | Accepted |
 | [0005](./0005-monorepo-with-shared-packages.md) | A monorepo with genuinely shared packages                   | Accepted |
 | [0006](./0006-pagination-per-resource.md)       | Pagination strategy chosen per resource                     | Accepted |
+| [0007](./0007-rbac-not-abac.md)                 | Role-based access control, not attribute-based              | Accepted |
+| [0008](./0008-redis-as-disposable-state.md)     | Redis holds only reconstructible state                      | Accepted |
+| [0009](./0009-commonjs-for-shared-packages.md)  | Shared packages emit CommonJS                               | Accepted |

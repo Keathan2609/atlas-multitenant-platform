@@ -15,7 +15,7 @@
     "generate": "prisma generate",
     "migrate": "prisma migrate dev",
     "migrate:deploy": "prisma migrate deploy",
-    "migrate:test": "dotenv -e ../../.env -v DATABASE_URL=$TEST_DATABASE_URL -- prisma migrate deploy",
+    "migrate:test": "node scripts/migrate-test.mjs",
     "reset": "prisma migrate reset --force",
     "seed": "tsx src/seed/index.ts",
     "studio": "prisma studio",

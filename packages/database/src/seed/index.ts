@@ -1,4 +1,24 @@
+import path from 'node:path';
+import { config as loadDotenv } from 'dotenv';
 import argon2 from 'argon2';
+
+/**
+ * The repository-root .env.
+ *
+ * Loaded here because this script is invoked directly by tsx, without the
+ * Prisma CLI that would otherwise read prisma.config.ts and populate the
+ * environment. Without it `pnpm db:seed` fails with "DATABASE_URL is not set"
+ * on a clean checkout — which is the exact flow the README documents.
+ *
+ * The seed is a development-only script and dotenv is a devDependency of this
+ * package, so a static import is correct here; the API loads it lazily instead
+ * because its production image omits dev dependencies.
+ *
+ * dotenv does not overwrite variables that are already set, so
+ * `DATABASE_URL=… pnpm db:seed` still wins.
+ */
+loadDotenv({ path: path.resolve(process.cwd(), '../../.env') });
+
 import { createPrismaClient, type PrismaClient } from '../client.js';
 import { newId } from '../id.js';
 import {

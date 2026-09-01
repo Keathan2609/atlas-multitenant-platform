@@ -159,9 +159,19 @@ export function forOrganization(
     name: `tenant-scope:${organizationId}`,
     query: {
       $allModels: {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Prisma's
-        // $allOperations callback is intentionally untyped across models; the
-        // narrowing happens on `model` below.
+        /*
+         * Prisma's $allOperations callback is intentionally untyped across
+         * models — there is no single type that describes the arguments of
+         * every operation on every model — so the narrowing happens on `model`
+         * below. `async` is kept because Prisma expects a promise-returning
+         * function even where this path has nothing to await.
+         *
+         * The directive must be the line immediately above the code: an
+         * `eslint-disable-next-line` followed by further comment lines targets
+         * the comment, not the statement, and is silently inert. It was, until
+         * the release audit found it.
+         */
+        /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/require-await */
         async $allOperations({ model, operation, args, query }: any) {
           if (!model || !TENANT_OWNED_MODELS.has(model)) {
             return query(args) as unknown;
@@ -195,6 +205,7 @@ export function forOrganization(
 
           return query(next) as unknown;
         },
+        /* eslint-enable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/require-await */
       },
     },
   });
