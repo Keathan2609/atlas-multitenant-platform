@@ -207,6 +207,26 @@ export class SessionService {
     return sessions.length;
   }
 
+  /**
+   * Drops the cached copy of every session belonging to a user, leaving the
+   * sessions themselves valid.
+   *
+   * The cache stores the user record alongside the session, so editing a
+   * display name would otherwise keep showing the old one for up to
+   * SESSION_CACHE_TTL_SECONDS on every request that hits the cache. Revoking
+   * would be the wrong tool: nothing about a rename should sign anyone out.
+   */
+  async clearCacheForUser(userId: string): Promise<void> {
+    const sessions = await this.prisma.unscoped.session.findMany({
+      where: { userId, revokedAt: null },
+      select: { tokenHash: true },
+    });
+
+    await Promise.all(
+      sessions.map((s) => this.redis.client.del(`session:${s.tokenHash}`).catch(() => undefined)),
+    );
+  }
+
   async listForUser(userId: string) {
     return this.prisma.unscoped.session.findMany({
       where: { userId, revokedAt: null, expiresAt: { gt: new Date() } },

@@ -257,3 +257,79 @@ describe('error envelope', () => {
     expect(JSON.stringify(response.body)).not.toMatch(/stack|prisma|node_modules|at Object/i);
   });
 });
+
+/**
+ * Profile updates.
+ *
+ * The endpoint exists because the account screen needs it, but the properties
+ * worth pinning are the security ones: the account edited is always the caller's
+ * own, regardless of payload, and the change is visible immediately rather than
+ * hidden behind the session cache for up to a minute.
+ */
+describe('PATCH /auth/me', () => {
+  it('updates the caller’s own display name', async () => {
+    const { agent, csrfToken } = await registerUser(ctx, { displayName: 'Original Name' });
+
+    const response = await agent
+      .patch('/api/v1/auth/me')
+      .set('x-csrf-token', csrfToken)
+      .send({ displayName: 'Updated Name' })
+      .expect(200);
+
+    expect(response.body.user.displayName).toBe('Updated Name');
+  });
+
+  it('is visible on the next request, not after the session cache expires', async () => {
+    const { agent, csrfToken } = await registerUser(ctx, { displayName: 'Stale Name' });
+
+    // Populates the session cache with the old record.
+    await agent.get('/api/v1/auth/me').expect(200);
+
+    await agent
+      .patch('/api/v1/auth/me')
+      .set('x-csrf-token', csrfToken)
+      .send({ displayName: 'Fresh Name' })
+      .expect(200);
+
+    // Without cache invalidation this still returns 'Stale Name' — the whole
+    // point of clearing the user's cached sessions on write.
+    const me = await agent.get('/api/v1/auth/me').expect(200);
+    expect(me.body.user.displayName).toBe('Fresh Name');
+  });
+
+  it('cannot be pointed at another account', async () => {
+    const victim = await registerUser(ctx, { displayName: 'Victim' });
+    const attacker = await registerUser(ctx, { displayName: 'Attacker' });
+
+    // `id` and `email` are not in the schema; .strict() rejects the whole body
+    // rather than silently ignoring the extra keys.
+    await attacker.agent
+      .patch('/api/v1/auth/me')
+      .set('x-csrf-token', attacker.csrfToken)
+      .send({ id: victim.userId, displayName: 'Owned' })
+      .expect(422);
+
+    const untouched = await ctx.prisma.user.findUnique({ where: { id: victim.userId } });
+    expect(untouched?.displayName).toBe('Victim');
+  });
+
+  it('refuses an unauthenticated caller', async () => {
+    await ctx.http().patch('/api/v1/auth/me').send({ displayName: 'Nobody' }).expect(401);
+  });
+
+  it('requires a CSRF token', async () => {
+    const { agent } = await registerUser(ctx);
+
+    await agent.patch('/api/v1/auth/me').send({ displayName: 'No Token' }).expect(403);
+  });
+
+  it('rejects a blank display name', async () => {
+    const { agent, csrfToken } = await registerUser(ctx, { displayName: 'Keep Me' });
+
+    await agent
+      .patch('/api/v1/auth/me')
+      .set('x-csrf-token', csrfToken)
+      .send({ displayName: '   ' })
+      .expect(422);
+  });
+});

@@ -5,6 +5,7 @@ import {
   HttpCode,
   HttpStatus,
   Inject,
+  Patch,
   Post,
   Req,
   Res,
@@ -16,8 +17,10 @@ import {
   changePasswordSchema,
   loginSchema,
   registerSchema,
+  updateProfileSchema,
   type LoginInput,
   type RegisterInput,
+  type UpdateProfileInput,
 } from '@atlas/validation';
 import { CONFIG_TOKEN, type AppConfig } from '../../config/env.js';
 import { zodBody } from '../../common/http/zod-validation.pipe.js';
@@ -107,6 +110,19 @@ export class AuthController {
   me(@Req() request: Request) {
     if (!request.user) throw new UnauthenticatedError();
     return { user: request.user };
+  }
+
+  @Patch('me')
+  @ApiOperation({ summary: 'Update the authenticated user’s profile' })
+  async updateProfile(
+    @Body(zodBody(updateProfileSchema)) input: UpdateProfileInput,
+    @Req() request: Request,
+  ) {
+    if (!request.user) throw new UnauthenticatedError();
+    // The id is taken from the resolved session, never from the payload, so
+    // this route cannot be pointed at another account.
+    const user = await this.auth.updateProfile(request.user.id, input);
+    return { user };
   }
 
   @Get('sessions')

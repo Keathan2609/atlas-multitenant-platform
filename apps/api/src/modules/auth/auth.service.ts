@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { newId } from '@atlas/database';
 import type { Logger } from '@atlas/observability';
-import type { LoginInput, RegisterInput } from '@atlas/validation';
+import type { LoginInput, RegisterInput, UpdateProfileInput } from '@atlas/validation';
 import { LOGGER_TOKEN } from '../../common/logging/logger.provider.js';
 import { PrismaService } from '../../common/database/prisma.service.js';
 import {
@@ -162,6 +162,34 @@ export class AuthService {
 
   async logout(sessionId: string): Promise<void> {
     await this.sessions.revoke(sessionId);
+  }
+
+  /**
+   * Updates the caller's own profile.
+   *
+   * Scoped to the authenticated user by construction — the id comes from the
+   * resolved session, never from the request body, so there is no shape of
+   * payload that edits somebody else's account. Email is not editable here:
+   * changing it is an identity change that needs verification of the new
+   * address, which is a flow of its own rather than a field on this form.
+   */
+  async updateProfile(userId: string, input: UpdateProfileInput): Promise<SessionUser> {
+    const user = await this.prisma.unscoped.user.update({
+      where: { id: userId },
+      data: {
+        ...(input.displayName !== undefined ? { displayName: input.displayName } : {}),
+        ...(input.avatarUrl !== undefined ? { avatarUrl: input.avatarUrl ?? null } : {}),
+      },
+      select: { id: true, email: true, displayName: true, avatarUrl: true },
+    });
+
+    // Sessions cache the user record; without this the old name is served for
+    // up to a minute from any request that hits the cache.
+    await this.sessions.clearCacheForUser(userId);
+
+    this.logger.info({ event: 'auth.profile_updated', userId }, 'Profile updated');
+
+    return user;
   }
 
   /**
