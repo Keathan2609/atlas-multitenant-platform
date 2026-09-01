@@ -2,7 +2,7 @@
 
 Operations infrastructure for teams that run software. A multi-tenant SaaS
 platform where organizations manage workspaces, projects, work items, teams,
-members, API keys and an audit trail — with tenant isolation, role-based
+members, API keys and an audit trail with tenant isolation, role-based
 access control, and an interface built for people who keep it open all day.
 
 This is a portfolio project, built to be read. The decisions are argued in the
