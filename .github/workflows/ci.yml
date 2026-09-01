@@ -1,0 +1,251 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  # A second push to the same branch makes the first run's answer irrelevant.
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Turborepo needs this to be deterministic across jobs for its cache keys.
+  TURBO_TELEMETRY_DISABLED: 1
+  NEXT_TELEMETRY_DISABLED: 1
+
+jobs:
+  # ───────────────────────────────────────────────────────────────────────────
+  # Static checks. No services, so this starts immediately and gives the
+  # fastest possible signal on the most common kinds of mistake.
+  # ───────────────────────────────────────────────────────────────────────────
+  static:
+    name: Lint, typecheck, format
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      # Lint and typecheck both depend on ^build, because a package cannot be
+      # typechecked until the packages it imports have emitted their .d.ts.
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Format
+        run: pnpm format:check
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # Unit tests. Pure logic, no I/O — so no service containers and no database.
+  # ───────────────────────────────────────────────────────────────────────────
+  unit:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Test
+        run: pnpm test
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # Integration tests, against real Postgres and real Redis.
+  #
+  # Deliberately not mocked. The properties these assert — that a cross-tenant
+  # read returns 404, that Serializable isolation prevents two concurrent
+  # demotions — are properties of the database. See docs/testing.md.
+  # ───────────────────────────────────────────────────────────────────────────
+  integration:
+    name: Integration tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: atlas
+          POSTGRES_PASSWORD: atlas_local_dev
+          POSTGRES_DB: atlas
+        ports:
+          - 5434:5432
+        options: >-
+          --health-cmd "pg_isready -U atlas"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6380:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Environment
+        # The committed example is the contract; CI uses it verbatim apart from
+        # the secrets, which must never have working defaults in the repo.
+        run: |
+          cp .env.example .env
+          {
+            echo "SESSION_SECRET=$(openssl rand -hex 32)"
+            echo "API_KEY_PEPPER=$(openssl rand -hex 32)"
+          } >> .env
+
+      - name: Create the test database
+        # The compose stack does this with an init script; the service
+        # container has no equivalent hook, so it is created explicitly.
+        run: |
+          PGPASSWORD=atlas_local_dev psql -h localhost -p 5434 -U atlas -d atlas \
+            -c "CREATE DATABASE atlas_test OWNER atlas;"
+
+      - name: Migrate
+        run: |
+          pnpm db:migrate:deploy
+          pnpm --filter @atlas/database migrate:test
+
+      - name: Integration tests
+        run: pnpm test:integration
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # End-to-end, against a production build and a seeded database.
+  #
+  # This is the only job that would have caught several of the defects in
+  # docs/verification-log.md, so it runs the full stack rather than stubbing
+  # the API.
+  # ───────────────────────────────────────────────────────────────────────────
+  e2e:
+    name: End-to-end
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: atlas
+          POSTGRES_PASSWORD: atlas_local_dev
+          POSTGRES_DB: atlas
+        ports:
+          - 5434:5432
+        options: >-
+          --health-cmd "pg_isready -U atlas"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6380:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Environment
+        run: |
+          cp .env.example .env
+          {
+            echo "SESSION_SECRET=$(openssl rand -hex 32)"
+            echo "API_KEY_PEPPER=$(openssl rand -hex 32)"
+          } >> .env
+
+      - name: Migrate and seed
+        run: |
+          pnpm db:migrate:deploy
+          pnpm db:seed
+
+      - name: Build
+        run: pnpm build
+
+      - name: Install Chromium
+        # Only the browser the suite uses. Downloading all three would add
+        # minutes to every run for no coverage.
+        run: pnpm --filter @atlas/web exec playwright install --with-deps chromium
+
+      - name: Start the API
+        # A shell loop rather than `npx wait-on`: that would pull an undeclared
+        # package from the network on every run, and curl is already present.
+        run: |
+          # nohup and a log file, because a bare `&` can be reaped when the
+          # step's shell exits — and the API has to outlive this step.
+          nohup pnpm --filter @atlas/api start > /tmp/api.log 2>&1 &
+          for i in $(seq 1 60); do
+            if curl -sf http://localhost:4000/api/health/ready > /dev/null; then
+              echo "API ready after ${i}s"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "API did not become ready. Log follows:" >&2
+          cat /tmp/api.log >&2
+          exit 1
+
+      - name: End-to-end tests
+        # Playwright starts the web server itself; CI never reuses one.
+        run: pnpm test:e2e
+
+      - name: Upload the report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            apps/web/playwright-report
+            apps/web/test-results
+          retention-days: 7
+
+      - name: API log on failure
+        if: failure()
+        run: cat /tmp/api.log || true
