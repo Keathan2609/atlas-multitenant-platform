@@ -88,6 +88,25 @@ export function useCurrentUser(config?: QueryConfig<{ user: CurrentUser }>) {
   });
 }
 
+export interface SessionRow {
+  id: string;
+  ipAddress: string | null;
+  userAgent: string | null;
+  createdAt: string;
+  lastSeenAt: string;
+  expiresAt: string;
+  /** Set by the server so the UI can mark "this device" without comparing ids. */
+  current: boolean;
+}
+
+export function useSessions() {
+  return useQuery({
+    queryKey: keys.sessions,
+    queryFn: ({ signal }) => api.get<{ data: SessionRow[] }>('/auth/sessions', undefined, signal),
+    ...defaultQueryOptions,
+  });
+}
+
 export function useOrganizations() {
   return useQuery({
     queryKey: keys.organizations,
@@ -159,8 +178,29 @@ export function useProjects(
   );
 }
 
+export interface ProjectMember {
+  id: string;
+  role: 'MAINTAINER' | 'CONTRIBUTOR' | 'OBSERVER';
+  user: { id: string; displayName: string; email: string; avatarUrl: string | null };
+}
+
+export interface ProjectDetail {
+  id: string;
+  name: string;
+  key: string;
+  description: string | null;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+  archivedAt: string | null;
+  workspace: { id: string; name: string; slug: string };
+  team: { id: string; name: string; slug: string } | null;
+  members: ProjectMember[];
+  _count: { workItems: number };
+}
+
 export function useProject(slug: string, projectId: string) {
-  return useTenantQuery<Record<string, unknown>>(
+  return useTenantQuery<ProjectDetail>(
     keys.project(slug, projectId),
     `/organizations/${slug}/projects/${projectId}`,
     undefined,
