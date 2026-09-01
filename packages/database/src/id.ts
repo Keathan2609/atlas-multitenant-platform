@@ -19,7 +19,7 @@ import { uuidv7 } from 'uuidv7';
  * build a full object graph — organization, membership, workspace, audit
  * event — and know every id before opening the transaction.
  *
- * See docs/decisions/006-identifier-strategy.md.
+ * See docs/decisions/0004-uuidv7-identifiers.md.
  */
 export function newId(): string {
   return uuidv7();

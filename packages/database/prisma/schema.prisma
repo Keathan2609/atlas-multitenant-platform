@@ -3,7 +3,7 @@
 // ── Tenancy strategy ─────────────────────────────────────────────────────────
 // Shared schema, shared database, discriminator column. Every tenant-owned
 // table carries `organizationId`. The trade-offs are analysed in
-// docs/decisions/002-multi-tenant-data-model.md.
+// docs/decisions/0001-shared-schema-multi-tenancy.md.
 //
 // Application-level scoping is enforced by the TenantScope repository layer,
 // but application code is fallible, so the schema adds a second, structural
@@ -22,7 +22,7 @@
 // ── Identifiers ──────────────────────────────────────────────────────────────
 // UUIDv7, generated in application code (see src/id.ts). Time-ordered, so
 // B-tree inserts stay at the right edge of the index instead of scattering
-// random pages like UUIDv4. See docs/decisions/006-identifier-strategy.md.
+// random pages like UUIDv4. See docs/decisions/0004-uuidv7-identifiers.md.
 //
 // ── Index ordering ───────────────────────────────────────────────────────────
 // Composite indexes lead with `organizationId` because every production query

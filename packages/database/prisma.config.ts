@@ -11,7 +11,7 @@ import { defineConfig } from 'prisma/config';
  * set to this package, so a bare `dotenv/config` would look in the wrong
  * directory and leave DATABASE_URL undefined. `process.cwd()` is used rather
  * than `import.meta.url` because this package emits CommonJS — see
- * docs/decisions/008-module-format.md — and import.meta is not available there.
+ * docs/decisions/0009-commonjs-for-shared-packages.md — and import.meta is not available there.
  *
  * `override: false` means a variable already exported in the shell — how CI
  * and the integration suite inject TEST_DATABASE_URL — still wins over the file.

@@ -128,8 +128,8 @@ place and cursor in another, and why guards run before validation.
 **[Database](./docs/database.md)** — UUIDv7 identifiers, cascade behaviour, and
 why `SetNull` is unusable on a composite foreign key.
 
-**[Testing](./docs/testing.md)** — what 199 tests actually assert, and the one
-large gap.
+**[Testing](./docs/testing.md)** — what 242 tests actually assert across three
+layers, and why the end-to-end suite authenticates once rather than per test.
 
 **[Decisions](./docs/decisions)** — ADRs for the choices that were genuinely
 contested.
@@ -148,6 +148,7 @@ pnpm dev              # web + api, watched
 pnpm build            # everything
 pnpm test             # unit tests, no infrastructure needed
 pnpm test:integration # against real Postgres and Redis
+pnpm test:e2e         # Playwright, against a production build
 pnpm lint             # eslint across all 9 packages
 pnpm typecheck        # tsc, no emit
 ```
@@ -166,18 +167,23 @@ What works is verified — not assumed. Every screen has been driven in a browse
 against seeded data at three viewports, signed in as multiple roles, and the
 API's refusals were confirmed by forging requests the interface does not offer.
 
+The production API image has been built and run: it connects to Postgres and
+Redis, answers both health probes, serves a real login, and runs as a non-root
+user.
+
 What is missing, stated plainly:
 
-- **No frontend tests.** The browser verification that found fourteen defects
-  was manual. Five of those defects are invisible to typecheck, lint and unit
-  tests. A Playwright suite is the next thing worth building.
 - **Two-factor authentication is a recorded policy, not an enforcement.** The
   setting exists; the enrolment flow does not, and the UI says so.
 - **Email is not verified,** and changing an email address is not offered,
   precisely because doing it properly needs that flow.
-- **No CI pipeline or production container images yet.**
 - **The purge job for soft-deleted organizations is not written.** Deletion
   marks; nothing sweeps.
+- **No visual regression testing.** The end-to-end suite asserts structure and
+  layout properties, not pixels.
+- **The CI workflow has never run.** It is written so every step mirrors a
+  command verified locally, but GitHub Actions cannot be exercised from here,
+  and it should be treated as unproven until a first push.
 
 ---
 

@@ -49,7 +49,7 @@ export class AuditLogService {
    * ATLAS ids are UUIDv7 and therefore time-ordered. `WHERE id < cursor ORDER
    * BY id DESC` is a single-column index scan against
    * `@@index([organizationId, id(sort: Desc)])` with no tiebreaker column.
-   * See docs/decisions/006-identifier-strategy.md.
+   * See docs/decisions/0004-uuidv7-identifiers.md.
    */
   async list(tenant: TenantContext, query: ListAuditLogsInput): Promise<AuditLogPage> {
     const db = this.prisma.forTenant(tenant.organizationId);

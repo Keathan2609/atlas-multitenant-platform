@@ -12,7 +12,7 @@
  * is one edit rather than a codebase-wide grep.
  *
  * Model: role-based, not attribute-based. The reasoning and the migration
- * path to ABAC are in docs/decisions/004-rbac-permission-model.md.
+ * path to ABAC are in docs/decisions/0007-rbac-not-abac.md.
  *
  * ── Security boundary ────────────────────────────────────────────────────────
  * Every check that *matters* runs on the server. The web app imports this

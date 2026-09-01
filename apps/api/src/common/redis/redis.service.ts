@@ -18,7 +18,7 @@ import { LOGGER_TOKEN } from '../logging/logger.provider.js';
  * persistence disabled. Redis is not a source of truth here; if it is wiped,
  * the system loses rate-limit history and a warm cache, not data.
  *
- * See docs/decisions/007-redis-usage.md.
+ * See docs/decisions/0008-redis-as-disposable-state.md.
  */
 @Injectable()
 export class RedisService implements OnModuleInit, OnModuleDestroy {
@@ -82,7 +82,10 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
    * guessing expensive, and the extra complexity of a sliding-log window buys
    * little against that. Documented in docs/security.md § rate limiting.
    */
-  async incrementWindow(key: string, windowSeconds: number): Promise<{ count: number; ttl: number }> {
+  async incrementWindow(
+    key: string,
+    windowSeconds: number,
+  ): Promise<{ count: number; ttl: number }> {
     const results = await this.client
       .multi()
       .incr(key)
