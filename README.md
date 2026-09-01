@@ -163,7 +163,7 @@ pnpm infra:down       # stop containers
 
 ## Honest status
 
-What works is verified — not assumed. Every screen has been driven in a browser
+What works is verified, not assumed. Every screen has been driven in a browser
 against seeded data at three viewports, signed in as multiple roles, and the
 API's refusals were confirmed by forging requests the interface does not offer.
 
@@ -189,4 +189,4 @@ What is missing, stated plainly:
 
 ## Licence
 
-MIT — see [LICENSE](./LICENSE).
+MIT - see [LICENSE](./LICENSE).
