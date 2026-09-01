@@ -185,7 +185,10 @@ function WorkItemLine({
   return (
     <li>
       <Link
-        href={`/app/${slug}/work-items/${item.id}`}
+        // There is no per-item route (see docs/screen-inventory.md), so a row
+        // leads to the project the item belongs to, where it is listed in
+        // context with its description.
+        href={`/app/${slug}/projects/${item.project.id}`}
         className="flex items-center gap-3 px-4 py-2.5 hover:bg-surface-hover"
       >
         <Reference value={item.reference} className="w-[76px] shrink-0" />
