@@ -1,0 +1,39 @@
+# Everything that must be produced inside the image rather than copied into it.
+# A stale host build leaking into a container is a class of bug that is very
+# hard to see from the outside.
+node_modules
+**/node_modules
+dist
+**/dist
+.next
+**/.next
+.turbo
+**/.turbo
+
+# Local state and secrets. .env especially: an image must take its
+# configuration from the environment it runs in, never from a baked-in file.
+.env
+.env.*
+!.env.example
+*.log
+
+# Test and tooling output, none of which belongs in a runtime image.
+coverage
+**/coverage
+playwright-report
+**/playwright-report
+test-results
+**/test-results
+**/.auth
+
+# Development-only material.
+.git
+.github
+.vscode
+.idea
+docs
+infrastructure
+README.md
+LICENSE
+**/*.md
+!packages/database/prisma/**

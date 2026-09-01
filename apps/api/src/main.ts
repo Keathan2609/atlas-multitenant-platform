@@ -1,6 +1,8 @@
 import 'reflect-metadata';
 import path from 'node:path';
-import { config as loadDotenv } from 'dotenv';
+// Type-only, so it is erased at compile time and creates no runtime require —
+// which is the whole point of the lazy load below.
+import type * as Dotenv from 'dotenv';
 
 /**
  * Development environment file.
@@ -13,10 +15,18 @@ import { config as loadDotenv } from 'dotenv';
  *
  * dotenv does not overwrite variables that are already set, so an explicit
  * `DATABASE_URL=… pnpm dev` still takes precedence over the file.
+ *
+ * Required lazily, inside the gate, rather than imported at the top. dotenv is
+ * a devDependency, so a production image built with `--prod` does not contain
+ * it — and a static import is resolved regardless of any runtime condition.
+ * The first version of this used one, and the container crashed on boot with
+ * "Cannot find module 'dotenv'" while the build itself passed cleanly.
  */
 if (process.env.NODE_ENV !== 'production') {
   // cwd is apps/api under `nest start`; the file lives at the repository root
   // so one .env serves the API, the seed script, and the integration suite.
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { config: loadDotenv } = require('dotenv') as typeof Dotenv;
   loadDotenv({ path: path.resolve(process.cwd(), '../../.env') });
 }
 
