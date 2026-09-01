@@ -36,11 +36,24 @@ export function Dialog({
   footer?: React.ReactNode;
   width?: 'sm' | 'md';
 }) {
+  const returnFocusTo = useReturnFocus(open);
+
   return (
     <RadixDialog.Root open={open} onOpenChange={onOpenChange}>
       <RadixDialog.Portal>
         <RadixDialog.Overlay className="fixed inset-0 z-50 bg-black/40" />
         <RadixDialog.Content
+          onCloseAutoFocus={(event) => {
+            // Radix restores focus to its own Trigger, and these dialogs are
+            // opened from ordinary buttons and row menus holding state — so
+            // without this, closing drops focus on <body> and the next Tab
+            // starts again from the top of the page.
+            const target = returnFocusTo.current;
+            if (target && document.contains(target)) {
+              event.preventDefault();
+              target.focus();
+            }
+          }}
           className={cx(
             'fixed left-1/2 top-1/2 z-50 w-[calc(100vw-2rem)] -translate-x-1/2 -translate-y-1/2',
             'rounded-lg border border-border bg-surface-raised shadow-dialog',
@@ -72,6 +85,36 @@ export function Dialog({
 }
 
 export const DialogClose = RadixDialog.Close;
+
+/**
+ * Remembers what to give focus back to when a dialog closes.
+ *
+ * Tracked from a `focusin` listener rather than read when `open` flips,
+ * because by the time an effect runs the focus scope has already moved focus
+ * inside the dialog. Anything within a dialog is ignored, so the value is
+ * always the last control outside one — which is what opened it.
+ */
+function useReturnFocus(open: boolean): React.RefObject<HTMLElement | null> {
+  const lastOutside = React.useRef<HTMLElement | null>(null);
+  const captured = React.useRef<HTMLElement | null>(null);
+
+  React.useEffect(() => {
+    function onFocusIn(event: FocusEvent) {
+      const target = event.target;
+      if (!(target instanceof HTMLElement)) return;
+      if (target.closest('[role="dialog"]')) return;
+      lastOutside.current = target;
+    }
+    document.addEventListener('focusin', onFocusIn, true);
+    return () => document.removeEventListener('focusin', onFocusIn, true);
+  }, []);
+
+  React.useEffect(() => {
+    if (open) captured.current = lastOutside.current;
+  }, [open]);
+
+  return captured;
+}
 
 /**
  * Destructive confirmation.

@@ -78,7 +78,14 @@ export function DataTable<T>({
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full border-collapse text-sm">
+      {/*
+        Fixed layout, not auto. Every column here either declares a width or is
+        the one flexible column, which is exactly what `table-fixed` expects —
+        and it is what makes `truncate-cell` work: under `auto`, a nowrap cell
+        sets the column's intrinsic width instead of being clipped, so a long
+        description widens the table until it overflows its scroller.
+      */}
+      <table className="w-full table-fixed border-collapse text-sm">
         {caption && <caption className="sr-only">{caption}</caption>}
 
         <thead>
@@ -111,7 +118,11 @@ export function DataTable<T>({
                         )
                       }
                       className={cx(
-                        'inline-flex items-center gap-1 rounded-sm -mx-1 px-1',
+                        // `uppercase` is repeated from the th because preflight
+                        // resets text-transform on buttons, which otherwise
+                        // leaves every sortable column sentence-case beside
+                        // uppercase neighbours.
+                        'inline-flex items-center gap-1 rounded-sm -mx-1 px-1 uppercase',
                         'hover:text-fg transition-colors',
                         isSorted && 'text-fg',
                         column.align === 'right' && 'flex-row-reverse',

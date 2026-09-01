@@ -45,6 +45,9 @@ function navigation(slug: string): Array<{ group: string | null; items: NavItem[
         { label: 'Projects', href: `${base}/projects`, prefix: true, permission: Permission.PROJECTS_READ },
         { label: 'Work items', href: `${base}/work-items`, prefix: true, permission: Permission.WORKITEMS_READ },
         { label: 'Teams', href: `${base}/teams`, prefix: true, permission: Permission.TEAMS_READ },
+        // Structural rather than daily, but it is where projects come from, so
+        // it sits with the work rather than with the administrative group.
+        { label: 'Workspaces', href: `${base}/workspaces`, permission: Permission.WORKSPACES_READ },
         { label: 'Members', href: `${base}/members`, permission: Permission.MEMBERS_READ },
       ],
     },
@@ -200,8 +203,14 @@ function Sidebar({
         className={cx(
           'fixed inset-y-0 left-0 z-40 flex w-sidebar shrink-0 flex-col',
           'border-r border-border bg-surface',
-          'transition-transform duration-150 lg:static lg:translate-x-0',
-          open ? 'translate-x-0' : '-translate-x-full',
+          'transition-[transform,visibility] duration-150 motion-reduce:transition-none',
+          'lg:static lg:translate-x-0 lg:visible',
+          // Visibility, not just translation. A drawer parked off-screen with
+          // `translate` alone keeps every link in the tab order, so a keyboard
+          // user on a phone tabs into navigation they cannot see and loses
+          // track of focus entirely. `visibility: hidden` takes the subtree out
+          // of the tab order and the accessibility tree, and still animates.
+          open ? 'visible translate-x-0' : 'invisible -translate-x-full',
         )}
       >
         <OrganizationSwitcher current={organization} organizations={organizations} />

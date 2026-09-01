@@ -230,6 +230,19 @@
     border-radius: var(--radius-sm);
   }
 
+  /*
+   * The ring colour, pinned at the element level.
+   *
+   * outline-color's initial value is currentColor, and something in the
+   * cascade was resetting it on elements that carry utility classes — the
+   * result was a focus ring that took the element's own text colour, so nav
+   * links rang grey and the account button rang white. Setting the colour on
+   * every element means whichever rule turns an outline on, it is the accent.
+   */
+  * {
+    outline-color: var(--color-accent);
+  }
+
   /* Removes the ring only where the component draws its own. */
   [data-focus-styled]:focus-visible {
     outline: none;

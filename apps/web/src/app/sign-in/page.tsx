@@ -3,6 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { loginSchema, type LoginInput } from '@atlas/validation';
@@ -23,8 +24,36 @@ import type { OrganizationSummary } from '@/lib/queries';
  * all, and it earns its place by being consistent with what follows.
  */
 export default function SignInPage() {
+  // useSearchParams opts the subtree into client-side rendering, and Next
+  // refuses to prerender a page that does so without a boundary — a failure
+  // that only appears in a production build, never in dev. The fallback is the
+  // page's own chrome, so nothing shifts when the form arrives.
+  return (
+    <React.Suspense fallback={<SignInFrame />}>
+      <SignInForm />
+    </React.Suspense>
+  );
+}
+
+/** The static part of the page, shared by the form and its loading fallback. */
+function SignInFrame({ children }: { children?: React.ReactNode }) {
+  return (
+    <main className="flex min-h-dvh flex-col items-center justify-center bg-canvas px-4 py-10">
+      <div className="w-full max-w-[352px]">
+        <div className="mb-7">
+          <p className="reference text-base font-medium tracking-tight text-fg">ATLAS</p>
+          <h1 className="mt-4 text-lg font-semibold text-fg">Sign in</h1>
+        </div>
+        {children}
+      </div>
+    </main>
+  );
+}
+
+function SignInForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const queryClient = useQueryClient();
   const [formError, setFormError] = React.useState<string | null>(null);
 
   const {
@@ -41,6 +70,12 @@ export default function SignInPage() {
     setFormError(null);
     try {
       await api.post('/auth/login', values);
+
+      // A new session means a new principal. Anything cached belongs to
+      // whoever was signed in before — on a shared machine that is somebody
+      // else's organization list — and staleTime would otherwise serve it for
+      // the next thirty seconds before the first refetch replaced it.
+      queryClient.clear();
 
       // Where to land is decided by what the account can actually reach, not
       // by a guess: one organization goes straight in, several go to the
@@ -66,16 +101,9 @@ export default function SignInPage() {
   }
 
   return (
-    <main className="flex min-h-dvh flex-col items-center justify-center bg-canvas px-4 py-10">
-      <div className="w-full max-w-[352px]">
-        <div className="mb-7">
-          <p className="reference text-base font-medium tracking-tight text-fg">
-            ATLAS
-          </p>
-          <h1 className="mt-4 text-lg font-semibold text-fg">Sign in</h1>
-        </div>
-
-        <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-4">
+    <SignInFrame>
+      <>
+        <form onSubmit={(event) => void handleSubmit(onSubmit)(event)} noValidate className="flex flex-col gap-4">
           {formError && (
             // Page-level, above the fields, and role="alert" so it is announced.
             // A toast would be wrong here: the message explains why the form
@@ -121,8 +149,8 @@ export default function SignInPage() {
         </p>
 
         <DemoAccounts />
-      </div>
-    </main>
+      </>
+    </SignInFrame>
   );
 }
 
