@@ -77,7 +77,11 @@ export class WorkspacesService {
     requestContext: RequestContext,
   ) {
     const db = this.prisma.forTenant(tenant.organizationId);
-    const slug = await this.resolveSlug(tenant, input.slug ?? slugify(input.name), Boolean(input.slug));
+    const slug = await this.resolveSlug(
+      tenant,
+      input.slug ?? slugify(input.name),
+      Boolean(input.slug),
+    );
 
     const workspace = await db.workspace.create({
       data: {
@@ -212,14 +216,19 @@ export class WorkspacesService {
     if (!taken) return base;
 
     if (userSupplied) {
-      throw new ConflictError(ErrorCode.SLUG_TAKEN, 'A workspace with that address already exists.', [
-        { field: 'slug', message: 'This address is already in use.' },
-      ]);
+      throw new ConflictError(
+        ErrorCode.SLUG_TAKEN,
+        'A workspace with that address already exists.',
+        [{ field: 'slug', message: 'This address is already in use.' }],
+      );
     }
 
     for (let suffix = 2; suffix < 25; suffix++) {
       const attempt = `${base}-${suffix}`.slice(0, 64);
-      const exists = await db.workspace.findFirst({ where: { slug: attempt }, select: { id: true } });
+      const exists = await db.workspace.findFirst({
+        where: { slug: attempt },
+        select: { id: true },
+      });
       if (!exists) return attempt;
     }
 

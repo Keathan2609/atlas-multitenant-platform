@@ -183,10 +183,7 @@ describe('session lifecycle', () => {
     const { agent: deviceA } = await registerUser(ctx, { email, password });
 
     const deviceB = ctx.http();
-    const loginB = await deviceB
-      .post('/api/v1/auth/login')
-      .send({ email, password })
-      .expect(200);
+    const loginB = await deviceB.post('/api/v1/auth/login').send({ email, password }).expect(200);
 
     await deviceA.get('/api/v1/auth/me').expect(200);
     await deviceB.get('/api/v1/auth/me').expect(200);
@@ -218,7 +215,10 @@ describe('CSRF protection', () => {
 
     const response = await agent
       .post('/api/v1/auth/change-password')
-      .send({ currentPassword: 'correct horse battery staple', newPassword: 'another good passphrase' })
+      .send({
+        currentPassword: 'correct horse battery staple',
+        newPassword: 'another good passphrase',
+      })
       .expect(403);
 
     expect(response.body.error.message).toMatch(/CSRF/i);
@@ -230,7 +230,10 @@ describe('CSRF protection', () => {
     await agent
       .post('/api/v1/auth/change-password')
       .set('x-csrf-token', 'not-the-right-token')
-      .send({ currentPassword: 'correct horse battery staple', newPassword: 'another good passphrase' })
+      .send({
+        currentPassword: 'correct horse battery staple',
+        newPassword: 'another good passphrase',
+      })
       .expect(403);
   });
 

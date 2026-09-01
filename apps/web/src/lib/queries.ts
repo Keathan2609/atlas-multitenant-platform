@@ -77,7 +77,10 @@ export const defaultQueryOptions = {
   refetchOnWindowFocus: true,
 } as const;
 
-type QueryConfig<T> = Omit<UseQueryOptions<T, Error, T, readonly unknown[]>, 'queryKey' | 'queryFn'>;
+type QueryConfig<T> = Omit<
+  UseQueryOptions<T, Error, T, readonly unknown[]>,
+  'queryKey' | 'queryFn'
+>;
 
 export function useCurrentUser(config?: QueryConfig<{ user: CurrentUser }>) {
   return useQuery({
@@ -166,10 +169,7 @@ export interface ProjectRow {
   memberCount: number;
 }
 
-export function useProjects(
-  slug: string,
-  params: Record<string, string | number | undefined>,
-) {
+export function useProjects(slug: string, params: Record<string, string | number | undefined>) {
   return useTenantQuery<{ data: ProjectRow[]; pagination: Pagination }>(
     keys.projects(slug, params),
     `/organizations/${slug}/projects`,
@@ -225,10 +225,7 @@ export interface WorkItemRow {
   reporter: { id: string; displayName: string } | null;
 }
 
-export function useWorkItems(
-  slug: string,
-  params: Record<string, string | number | undefined>,
-) {
+export function useWorkItems(slug: string, params: Record<string, string | number | undefined>) {
   return useTenantQuery<{ data: WorkItemRow[]; pagination: Pagination }>(
     keys.workItems(slug, params),
     `/organizations/${slug}/work-items`,
@@ -363,7 +360,12 @@ export function useAuditLogs(
   return useTenantQuery<{
     data: AuditEntry[];
     pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
-  }>(keys.auditLogs(slug, params), `/organizations/${slug}/audit-logs`, params, Boolean(slug) && enabled);
+  }>(
+    keys.auditLogs(slug, params),
+    `/organizations/${slug}/audit-logs`,
+    params,
+    Boolean(slug) && enabled,
+  );
 }
 
 export function useAuditActions(slug: string, enabled = true) {
@@ -435,8 +437,10 @@ export function useWorkItemStatus(slug: string) {
       await queryClient.cancelQueries({ queryKey: ['work-items', slug] });
       const snapshot = queryClient.getQueriesData({ queryKey: ['work-items', slug] });
 
-      queryClient.setQueriesData<{ data: WorkItemRow[] }>({ queryKey: ['work-items', slug] }, (old) =>
-        old ? { ...old, data: old.data.map((w) => (w.id === id ? { ...w, status } : w)) } : old,
+      queryClient.setQueriesData<{ data: WorkItemRow[] }>(
+        { queryKey: ['work-items', slug] },
+        (old) =>
+          old ? { ...old, data: old.data.map((w) => (w.id === id ? { ...w, status } : w)) } : old,
       );
 
       // Returned so onError can put the previous state back exactly.

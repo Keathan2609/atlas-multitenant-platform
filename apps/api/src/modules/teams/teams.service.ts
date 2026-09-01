@@ -89,7 +89,11 @@ export class TeamsService {
     requestContext: RequestContext,
   ) {
     const db = this.prisma.forTenant(tenant.organizationId);
-    const slug = await this.resolveSlug(tenant, input.slug ?? slugify(input.name), Boolean(input.slug));
+    const slug = await this.resolveSlug(
+      tenant,
+      input.slug ?? slugify(input.name),
+      Boolean(input.slug),
+    );
 
     const team = await db.team.create({
       data: {
@@ -200,12 +204,7 @@ export class TeamsService {
    * check below exists to turn that into a clean 404 rather than a constraint
    * violation surfacing as a 500.
    */
-  async addMember(
-    tenant: TenantContext,
-    teamId: string,
-    userId: string,
-    role: 'LEAD' | 'MEMBER',
-  ) {
+  async addMember(tenant: TenantContext, teamId: string, userId: string, role: 'LEAD' | 'MEMBER') {
     const db = this.prisma.forTenant(tenant.organizationId);
     await this.requireTeam(tenant, teamId);
 

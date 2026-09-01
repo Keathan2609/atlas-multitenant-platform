@@ -55,10 +55,7 @@ export class ApiKeyGuard implements CanActivate {
         { event: 'security.api_key_rejected', ip: request.ip, path: request.originalUrl },
         'API key rejected',
       );
-      throw new UnauthenticatedError(
-        ErrorCode.INVALID_API_KEY,
-        'That API key is not valid.',
-      );
+      throw new UnauthenticatedError(ErrorCode.INVALID_API_KEY, 'That API key is not valid.');
     }
 
     request.apiKeyContext = verified;

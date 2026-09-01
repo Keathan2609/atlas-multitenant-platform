@@ -120,7 +120,10 @@ export class ValidationError extends AppError {
 }
 
 export class UnauthenticatedError extends AppError {
-  constructor(code: ErrorCode = ErrorCode.UNAUTHENTICATED, message = 'Authentication is required.') {
+  constructor(
+    code: ErrorCode = ErrorCode.UNAUTHENTICATED,
+    message = 'Authentication is required.',
+  ) {
     super(code, HttpStatus.UNAUTHORIZED, message);
   }
 }
@@ -144,7 +147,10 @@ export class ForbiddenError extends AppError {
  * exist across the platform. See docs/security.md § IDOR.
  */
 export class NotFoundError extends AppError {
-  constructor(code: ErrorCode = ErrorCode.NOT_FOUND, message = 'The requested resource could not be found.') {
+  constructor(
+    code: ErrorCode = ErrorCode.NOT_FOUND,
+    message = 'The requested resource could not be found.',
+  ) {
     super(code, HttpStatus.NOT_FOUND, message);
   }
 }

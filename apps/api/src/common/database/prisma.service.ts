@@ -65,9 +65,7 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
           { event: 'security.tenant_scope_violation', ...details },
           'Tenant scope violation blocked',
         );
-        throw new Error(
-          `Tenant scope violation on ${details.model}.${details.operation}`,
-        );
+        throw new Error(`Tenant scope violation on ${details.model}.${details.operation}`);
       },
     });
   }

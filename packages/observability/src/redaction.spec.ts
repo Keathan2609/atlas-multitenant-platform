@@ -24,9 +24,16 @@ describe('redact', () => {
       keys: [{ keyHash: 'deadbeef' }, { name: 'CI deploy' }],
     }) as Record<string, never>;
 
-    expect((result as never as { request: { body: { user: { password: string } } } }).request.body.user.password).toBe(REDACTED);
-    expect((result as never as { keys: Array<{ keyHash?: string; name?: string }> }).keys[0]?.keyHash).toBe(REDACTED);
-    expect((result as never as { keys: Array<{ keyHash?: string; name?: string }> }).keys[1]?.name).toBe('CI deploy');
+    expect(
+      (result as never as { request: { body: { user: { password: string } } } }).request.body.user
+        .password,
+    ).toBe(REDACTED);
+    expect(
+      (result as never as { keys: Array<{ keyHash?: string; name?: string }> }).keys[0]?.keyHash,
+    ).toBe(REDACTED);
+    expect(
+      (result as never as { keys: Array<{ keyHash?: string; name?: string }> }).keys[1]?.name,
+    ).toBe('CI deploy');
   });
 
   it('catches a raw API key that leaked into a message value', () => {

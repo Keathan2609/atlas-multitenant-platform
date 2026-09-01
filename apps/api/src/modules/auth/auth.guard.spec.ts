@@ -56,7 +56,11 @@ function buildContext(options: {
 
   const reflector = {
     getAllAndOverride: (key: string) =>
-      key === IS_PUBLIC ? options.isPublic : key === IS_CSRF_EXEMPT ? options.isCsrfExempt : undefined,
+      key === IS_PUBLIC
+        ? options.isPublic
+        : key === IS_CSRF_EXEMPT
+          ? options.isCsrfExempt
+          : undefined,
   } as unknown as Reflector;
 
   const sessions = {

@@ -161,7 +161,8 @@ export async function registerUser(
   ctx: TestContext,
   overrides: Partial<{ email: string; password: string; displayName: string }> = {},
 ): Promise<{ agent: request.Agent; csrfToken: string; userId: string; email: string }> {
-  const email = overrides.email ?? `user-${Math.random().toString(36).slice(2, 10)}@northstar.example`;
+  const email =
+    overrides.email ?? `user-${Math.random().toString(36).slice(2, 10)}@northstar.example`;
   const password = overrides.password ?? 'correct horse battery staple';
   const displayName = overrides.displayName ?? 'Test Person';
 

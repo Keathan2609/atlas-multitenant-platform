@@ -6,7 +6,12 @@ import { usePathname, useRouter } from 'next/navigation';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { Permission, can, type OrganizationRole } from '@atlas/types';
 import { api } from '@/lib/api';
-import { useCurrentUser, useOrganizations, type CurrentUser, type OrganizationSummary } from '@/lib/queries';
+import {
+  useCurrentUser,
+  useOrganizations,
+  type CurrentUser,
+  type OrganizationSummary,
+} from '@/lib/queries';
 import { Avatar, Button, cx } from './ui/primitives';
 
 /**
@@ -42,8 +47,18 @@ function navigation(slug: string): Array<{ group: string | null; items: NavItem[
       group: null,
       items: [
         { label: 'Overview', href: base },
-        { label: 'Projects', href: `${base}/projects`, prefix: true, permission: Permission.PROJECTS_READ },
-        { label: 'Work items', href: `${base}/work-items`, prefix: true, permission: Permission.WORKITEMS_READ },
+        {
+          label: 'Projects',
+          href: `${base}/projects`,
+          prefix: true,
+          permission: Permission.PROJECTS_READ,
+        },
+        {
+          label: 'Work items',
+          href: `${base}/work-items`,
+          prefix: true,
+          permission: Permission.WORKITEMS_READ,
+        },
         { label: 'Teams', href: `${base}/teams`, prefix: true, permission: Permission.TEAMS_READ },
         // Structural rather than daily, but it is where projects come from, so
         // it sits with the work rather than with the administrative group.
@@ -56,7 +71,12 @@ function navigation(slug: string): Array<{ group: string | null; items: NavItem[
       items: [
         { label: 'Activity', href: `${base}/activity`, permission: Permission.AUDIT_READ },
         { label: 'API keys', href: `${base}/api-keys`, permission: Permission.APIKEYS_READ },
-        { label: 'Settings', href: `${base}/settings`, prefix: true, permission: Permission.SETTINGS_READ },
+        {
+          label: 'Settings',
+          href: `${base}/settings`,
+          prefix: true,
+          permission: Permission.SETTINGS_READ,
+        },
       ],
     },
   ];
@@ -114,10 +134,7 @@ export function AppShell({ slug, children }: { slug: string; children: React.Rea
   // exist, mirroring the API, which deliberately does not distinguish them.
   if (!organization) {
     return (
-      <UnknownOrganization
-        organizations={orgsQuery.data?.data ?? []}
-        user={userQuery.data.user}
-      />
+      <UnknownOrganization organizations={orgsQuery.data?.data ?? []} user={userQuery.data.user} />
     );
   }
 
@@ -154,10 +171,7 @@ export function AppShell({ slug, children }: { slug: string; children: React.Rea
         />
 
         <div className="flex min-w-0 flex-1 flex-col">
-          <MobileBar
-            organization={organization}
-            onOpenNav={() => setMobileNavOpen(true)}
-          />
+          <MobileBar organization={organization} onOpenNav={() => setMobileNavOpen(true)} />
           <main id="main" className="min-w-0 flex-1">
             {children}
           </main>
@@ -224,9 +238,7 @@ function Sidebar({
 
             return (
               <div key={group.group ?? 'primary'} className={cx(index > 0 && 'mt-4')}>
-                {group.group && (
-                  <p className="label-caps px-2 pb-1.5 pt-1">{group.group}</p>
-                )}
+                {group.group && <p className="label-caps px-2 pb-1.5 pt-1">{group.group}</p>}
                 <ul className="flex flex-col gap-px">
                   {visible.map((item) => {
                     const active = item.prefix
@@ -289,9 +301,7 @@ function OrganizationSwitcher({
                        hover:bg-surface-hover transition-colors"
           >
             <span className="min-w-0 flex-1">
-              <span className="block truncate text-base font-medium text-fg">
-                {current.name}
-              </span>
+              <span className="block truncate text-base font-medium text-fg">{current.name}</span>
               <span className="block truncate text-2xs text-fg-tertiary">
                 {current.role.toLowerCase()} · {current.memberCount}{' '}
                 {current.memberCount === 1 ? 'member' : 'members'}
@@ -360,12 +370,8 @@ function UserMenu({ user, role }: { user: CurrentUser; role: OrganizationRole })
           >
             <Avatar name={user.displayName} />
             <span className="min-w-0 flex-1">
-              <span className="block truncate text-sm text-fg">
-                {user.displayName}
-              </span>
-              <span className="block truncate text-2xs text-fg-tertiary">
-                {role.toLowerCase()}
-              </span>
+              <span className="block truncate text-sm text-fg">{user.displayName}</span>
+              <span className="block truncate text-2xs text-fg-tertiary">{role.toLowerCase()}</span>
             </span>
             <Chevron />
           </button>
@@ -432,7 +438,12 @@ function MobileBar({
         className="flex size-8 items-center justify-center rounded-md hover:bg-surface-hover"
       >
         <svg viewBox="0 0 16 16" className="size-4" aria-hidden="true">
-          <path d="M2 4h12M2 8h12M2 12h12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+          <path
+            d="M2 4h12M2 8h12M2 12h12"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+          />
         </svg>
       </button>
       <span className="truncate text-base font-medium">{organization.name}</span>
@@ -443,7 +454,13 @@ function MobileBar({
 function Chevron() {
   return (
     <svg viewBox="0 0 12 12" aria-hidden="true" className="size-3 shrink-0 text-fg-tertiary">
-      <path d="M3 4.5 6 7.5 9 4.5" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+      <path
+        d="M3 4.5 6 7.5 9 4.5"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        fill="none"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
@@ -488,9 +505,7 @@ function UnknownOrganization({
                                text-sm hover:bg-surface-hover"
                   >
                     <span className="truncate">{org.name}</span>
-                    <span className="reference text-fg-tertiary">
-                      {org.role.toLowerCase()}
-                    </span>
+                    <span className="reference text-fg-tertiary">{org.role.toLowerCase()}</span>
                   </Link>
                 </li>
               ))}
@@ -536,14 +551,8 @@ export function PageHeader({
       <div className="flex min-h-header flex-wrap items-center gap-x-4 gap-y-2 px-4 py-2 sm:px-6">
         <div className="min-w-0 flex-1">
           {breadcrumb && <div className="mb-0.5">{breadcrumb}</div>}
-          <h1 className="truncate text-lg font-semibold leading-tight text-fg">
-            {title}
-          </h1>
-          {description && (
-            <p className="mt-0.5 truncate text-xs text-fg-tertiary">
-              {description}
-            </p>
-          )}
+          <h1 className="truncate text-lg font-semibold leading-tight text-fg">{title}</h1>
+          {description && <p className="mt-0.5 truncate text-xs text-fg-tertiary">{description}</p>}
         </div>
         {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
       </div>

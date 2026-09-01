@@ -142,7 +142,9 @@ async function main(): Promise<void> {
     const user = USERS.find((u) => u.key === member.user);
     process.stdout.write(`  ${member.role.padEnd(6)}  ${user?.email}\n`);
   }
-  process.stdout.write(`\n  Second tenant (proves isolation): ${USERS.find((u) => u.key === 'jonas')?.email}\n`);
+  process.stdout.write(
+    `\n  Second tenant (proves isolation): ${USERS.find((u) => u.key === 'jonas')?.email}\n`,
+  );
   process.stdout.write(`  Northstar: /app/northstar   Meridian: /app/meridian\n`);
 
   void northstarId;
@@ -275,13 +277,55 @@ async function seedNorthstar(prisma: PrismaClient, userIds: Map<string, string>)
   // Audit entries describing what the seed itself represents, so the audit
   // screen has real history rather than being empty on first look. Written
   // through the same shape AuditService produces.
-  const auditEvents: Array<{ action: string; resourceType: string; resourceId: string; actor: string; metadata: Record<string, string> }> = [
-    { action: 'organization.created', resourceType: 'organization', resourceId: organizationId, actor: 'dana', metadata: { name: 'Northstar Systems', slug: 'northstar' } },
-    ...TEAMS.map((team) => ({ action: 'team.created', resourceType: 'team', resourceId: teamIds.get(team.key)!, actor: 'dana', metadata: { name: team.name } })),
-    ...PROJECTS.map((project) => ({ action: 'project.created', resourceType: 'project', resourceId: projectIds.get(project.key)!, actor: 'marcus', metadata: { name: project.name, key: project.projectKey } })),
-    { action: 'member.role_changed', resourceType: 'membership', resourceId: organizationId, actor: 'dana', metadata: { targetUserId: userIds.get('marcus')!, from: 'MEMBER', to: 'ADMIN' } },
-    { action: 'organization.settings_updated', resourceType: 'organization_settings', resourceId: organizationId, actor: 'dana', metadata: { requireTwoFactor: 'false' } },
-    { action: 'project.archived', resourceType: 'project', resourceId: projectIds.get('legacy-reporting')!, actor: 'marcus', metadata: { name: 'Legacy Reporting Decommission' } },
+  const auditEvents: Array<{
+    action: string;
+    resourceType: string;
+    resourceId: string;
+    actor: string;
+    metadata: Record<string, string>;
+  }> = [
+    {
+      action: 'organization.created',
+      resourceType: 'organization',
+      resourceId: organizationId,
+      actor: 'dana',
+      metadata: { name: 'Northstar Systems', slug: 'northstar' },
+    },
+    ...TEAMS.map((team) => ({
+      action: 'team.created',
+      resourceType: 'team',
+      resourceId: teamIds.get(team.key)!,
+      actor: 'dana',
+      metadata: { name: team.name },
+    })),
+    ...PROJECTS.map((project) => ({
+      action: 'project.created',
+      resourceType: 'project',
+      resourceId: projectIds.get(project.key)!,
+      actor: 'marcus',
+      metadata: { name: project.name, key: project.projectKey },
+    })),
+    {
+      action: 'member.role_changed',
+      resourceType: 'membership',
+      resourceId: organizationId,
+      actor: 'dana',
+      metadata: { targetUserId: userIds.get('marcus')!, from: 'MEMBER', to: 'ADMIN' },
+    },
+    {
+      action: 'organization.settings_updated',
+      resourceType: 'organization_settings',
+      resourceId: organizationId,
+      actor: 'dana',
+      metadata: { requireTwoFactor: 'false' },
+    },
+    {
+      action: 'project.archived',
+      resourceType: 'project',
+      resourceId: projectIds.get('legacy-reporting')!,
+      actor: 'marcus',
+      metadata: { name: 'Legacy Reporting Decommission' },
+    },
   ];
 
   for (const [index, event] of auditEvents.entries()) {
@@ -312,7 +356,12 @@ async function seedMeridian(prisma: PrismaClient, userIds: Map<string, string>):
   const organizationId = newId();
 
   await prisma.organization.create({
-    data: { id: organizationId, name: 'Meridian Labs', slug: 'meridian', createdAt: daysFromNow(-30) },
+    data: {
+      id: organizationId,
+      name: 'Meridian Labs',
+      slug: 'meridian',
+      createdAt: daysFromNow(-30),
+    },
   });
   await prisma.organizationSettings.create({ data: { organizationId } });
 

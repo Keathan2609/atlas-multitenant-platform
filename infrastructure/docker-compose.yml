@@ -30,7 +30,11 @@ services:
     healthcheck:
       # `pg_isready` alone returns healthy while the init scripts are still
       # running; querying a table forces a real connection through the auth path.
-      test: ['CMD-SHELL', 'pg_isready -U atlas -d atlas && psql -U atlas -d atlas -c "SELECT 1" > /dev/null']
+      test:
+        [
+          'CMD-SHELL',
+          'pg_isready -U atlas -d atlas && psql -U atlas -d atlas -c "SELECT 1" > /dev/null',
+        ]
       interval: 5s
       timeout: 5s
       retries: 10

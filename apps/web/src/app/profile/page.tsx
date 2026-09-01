@@ -139,7 +139,13 @@ function IdentitySection() {
               {error}
             </span>
           )}
-          <Button variant="primary" size="sm" disabled={!dirty} loading={saving} onClick={() => void save()}>
+          <Button
+            variant="primary"
+            size="sm"
+            disabled={!dirty}
+            loading={saving}
+            onClick={() => void save()}
+          >
             Save name
           </Button>
         </>
@@ -280,7 +286,11 @@ function PasswordSection() {
         </>
       }
     >
-      <form onSubmit={(event) => void handleSubmit(onSubmit)(event)} noValidate className="flex max-w-sm flex-col gap-3">
+      <form
+        onSubmit={(event) => void handleSubmit(onSubmit)(event)}
+        noValidate
+        className="flex max-w-sm flex-col gap-3"
+      >
         {formError && (
           <p
             role="alert"
@@ -428,21 +438,29 @@ function SessionsSection() {
 function describeAgent(userAgent: string | null): string {
   if (!userAgent) return 'Unknown device';
 
-  const browser =
-    /\bEdg\//.test(userAgent) ? 'Edge'
-    : /\bOPR\//.test(userAgent) ? 'Opera'
-    : /\bFirefox\//.test(userAgent) ? 'Firefox'
-    : /\bChrome\//.test(userAgent) ? 'Chrome'
-    : /\bSafari\//.test(userAgent) ? 'Safari'
-    : 'Unknown browser';
+  const browser = /\bEdg\//.test(userAgent)
+    ? 'Edge'
+    : /\bOPR\//.test(userAgent)
+      ? 'Opera'
+      : /\bFirefox\//.test(userAgent)
+        ? 'Firefox'
+        : /\bChrome\//.test(userAgent)
+          ? 'Chrome'
+          : /\bSafari\//.test(userAgent)
+            ? 'Safari'
+            : 'Unknown browser';
 
-  const platform =
-    /Windows/.test(userAgent) ? 'Windows'
-    : /Android/.test(userAgent) ? 'Android'
-    : /(iPhone|iPad|iPod)/.test(userAgent) ? 'iOS'
-    : /Mac OS X/.test(userAgent) ? 'macOS'
-    : /Linux/.test(userAgent) ? 'Linux'
-    : null;
+  const platform = /Windows/.test(userAgent)
+    ? 'Windows'
+    : /Android/.test(userAgent)
+      ? 'Android'
+      : /(iPhone|iPad|iPod)/.test(userAgent)
+        ? 'iOS'
+        : /Mac OS X/.test(userAgent)
+          ? 'macOS'
+          : /Linux/.test(userAgent)
+            ? 'Linux'
+            : null;
 
   return platform ? `${browser} on ${platform}` : browser;
 }

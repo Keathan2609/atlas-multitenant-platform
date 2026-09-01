@@ -119,7 +119,12 @@ export class AuthService {
     const valid = await this.passwords.verify(user.passwordHash, input.password);
     if (!valid) {
       this.logger.warn(
-        { event: 'auth.login_failed', reason: 'bad_password', userId: user.id, ip: context.ipAddress },
+        {
+          event: 'auth.login_failed',
+          reason: 'bad_password',
+          userId: user.id,
+          ip: context.ipAddress,
+        },
         'Login failed',
       );
       throw new UnauthenticatedError(

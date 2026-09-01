@@ -153,10 +153,10 @@ export default function WorkItemsPage() {
   const pagination = query.data?.pagination;
   const filtered = Boolean(
     params.search ||
-      params.get('status') ||
-      params.get('priority') ||
-      params.get('type') ||
-      params.get('assigneeId'),
+    params.get('status') ||
+    params.get('priority') ||
+    params.get('type') ||
+    params.get('assigneeId'),
   );
 
   return (

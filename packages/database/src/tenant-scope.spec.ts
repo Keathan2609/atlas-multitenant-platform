@@ -74,17 +74,15 @@ describe('forOrganization', () => {
     const result = await asA.organizationMembership.deleteMany({ where: { userId: userB } });
 
     expect(result.count).toBe(0);
-    expect(
-      await prisma.organizationMembership.count({ where: { organizationId: orgB } }),
-    ).toBe(1);
+    expect(await prisma.organizationMembership.count({ where: { organizationId: orgB } })).toBe(1);
   });
 
   it('throws on a contradictory explicit organizationId', async () => {
     // Silently rewriting it would hide either a bug or an escape attempt.
     const asA = forOrganization(prisma, orgA);
-    await expect(
-      asA.workspace.findMany({ where: { organizationId: orgB } }),
-    ).rejects.toThrow(/Tenant scope violation/);
+    await expect(asA.workspace.findMany({ where: { organizationId: orgB } })).rejects.toThrow(
+      /Tenant scope violation/,
+    );
   });
 
   it('leaves non-tenant models untouched', async () => {
@@ -139,7 +137,12 @@ describe('forOrganization inside $transaction', () => {
     await expect(
       asA.$transaction(async (tx) => {
         await tx.workspace.create({
-          data: { id: workspaceId, name: 'Doomed', slug: `doomed-${Date.now()}`, isDefault: false } as never,
+          data: {
+            id: workspaceId,
+            name: 'Doomed',
+            slug: `doomed-${Date.now()}`,
+            isDefault: false,
+          } as never,
         });
         throw new Error('deliberate rollback');
       }),

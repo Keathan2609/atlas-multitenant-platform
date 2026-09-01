@@ -17,7 +17,10 @@ import { acceptInvitationSchema, inviteMemberSchema } from '@atlas/validation';
 import { zodBody } from '../../common/http/zod-validation.pipe.js';
 import { RateLimit, RateLimitGuard } from '../../common/http/rate-limit.guard.js';
 import { RequireTenant, TenantGuard, requireTenant } from '../../common/tenancy/tenant.guard.js';
-import { PermissionsGuard, RequirePermission } from '../../common/authorization/permissions.guard.js';
+import {
+  PermissionsGuard,
+  RequirePermission,
+} from '../../common/authorization/permissions.guard.js';
 import { auditContext } from '../../common/audit/audit.service.js';
 import { Public } from '../auth/auth.guard.js';
 import { requireUser } from '../organizations/organizations.controller.js';
@@ -107,10 +110,7 @@ export class InvitationRedemptionController {
   @HttpCode(HttpStatus.OK)
   @RateLimit({ max: 20, windowSeconds: 600, by: 'user' })
   @ApiOperation({ summary: 'Accept an invitation as the signed-in user' })
-  accept(
-    @Body(zodBody(acceptInvitationSchema)) input: { token: string },
-    @Req() request: Request,
-  ) {
+  accept(@Body(zodBody(acceptInvitationSchema)) input: { token: string }, @Req() request: Request) {
     return this.invitations.accept(requireUser(request).id, input.token, auditContext(request));
   }
 }

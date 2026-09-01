@@ -4,7 +4,15 @@ import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { Permission } from '@atlas/types';
 import { PageBody, PageHeader, useTenant } from '@/components/app-shell';
-import { Button, Field, Input, Reference, Select, StatusBadge, Textarea } from '@/components/ui/primitives';
+import {
+  Button,
+  Field,
+  Input,
+  Reference,
+  Select,
+  StatusBadge,
+  Textarea,
+} from '@/components/ui/primitives';
 import { Dialog, DialogClose } from '@/components/ui/dialog';
 import { DataTable, Pagination, Panel, PanelHeader, type Column } from '@/components/ui/table';
 import { EmptyState, ErrorState, ForbiddenState, NoResultsState } from '@/components/ui/states';
@@ -64,9 +72,7 @@ export default function ProjectsPage() {
         <div className="min-w-0">
           <div className="truncate-cell font-medium text-fg">{project.name}</div>
           {project.description && (
-            <div className="truncate-cell text-xs text-fg-tertiary">
-              {project.description}
-            </div>
+            <div className="truncate-cell text-xs text-fg-tertiary">{project.description}</div>
           )}
         </div>
       ),
@@ -95,9 +101,7 @@ export default function ProjectsPage() {
       align: 'right',
       width: 'w-[72px]',
       hideBelow: 'sm',
-      render: (project) => (
-        <span className="text-fg-secondary">{project.workItemCount}</span>
-      ),
+      render: (project) => <span className="text-fg-secondary">{project.workItemCount}</span>,
     },
     {
       id: 'updatedAt',
@@ -156,7 +160,9 @@ export default function ProjectsPage() {
                 options={STATUSES}
               />
               <span className="ml-auto text-xs text-fg-tertiary">
-                {pagination ? `${pagination.total} ${pagination.total === 1 ? 'project' : 'projects'}` : null}
+                {pagination
+                  ? `${pagination.total} ${pagination.total === 1 ? 'project' : 'projects'}`
+                  : null}
               </span>
             </PanelHeader>
 
@@ -166,9 +172,7 @@ export default function ProjectsPage() {
               rows={rows}
               rowKey={(project) => project.id}
               loading={query.isFetching}
-              onRowClick={(project) =>
-                router.push(`/app/${tenant.slug}/projects/${project.id}`)
-              }
+              onRowClick={(project) => router.push(`/app/${tenant.slug}/projects/${project.id}`)}
               sort={{ id: params.sortBy, direction: params.sortDirection }}
               onSortChange={params.setSort}
               empty={
@@ -274,9 +278,7 @@ function CreateProjectDialog({
       router.push(`/app/${tenant.slug}/projects/${created.id}`);
     } catch (error) {
       if (!applyFieldErrors(error, setError as never)) {
-        setFormError(
-          error instanceof ApiError ? error.message : describeError(error).description,
-        );
+        setFormError(error instanceof ApiError ? error.message : describeError(error).description);
       }
     }
   }
@@ -294,13 +296,21 @@ function CreateProjectDialog({
               Cancel
             </Button>
           </DialogClose>
-          <Button variant="primary" loading={isSubmitting} onClick={(event) => void handleSubmit(onSubmit)(event)}>
+          <Button
+            variant="primary"
+            loading={isSubmitting}
+            onClick={(event) => void handleSubmit(onSubmit)(event)}
+          >
             Create project
           </Button>
         </>
       }
     >
-      <form onSubmit={(event) => void handleSubmit(onSubmit)(event)} noValidate className="flex flex-col gap-4">
+      <form
+        onSubmit={(event) => void handleSubmit(onSubmit)(event)}
+        noValidate
+        className="flex flex-col gap-4"
+      >
         {formError && (
           <p
             role="alert"
@@ -350,7 +360,11 @@ function CreateProjectDialog({
 
         <Field label="Team" htmlFor="project-team" error={errors.teamId?.message}>
           {/* Same reasoning as the key field: "Unassigned" is null, not ''. */}
-          <Select {...register('teamId', { setValueAs: (value: string) => (value === '' ? null : value) })}>
+          <Select
+            {...register('teamId', {
+              setValueAs: (value: string) => (value === '' ? null : value),
+            })}
+          >
             <option value="">Unassigned</option>
             {(teams.data?.data ?? []).map((team) => (
               <option key={team.id} value={team.id}>
@@ -360,7 +374,11 @@ function CreateProjectDialog({
           </Select>
         </Field>
 
-        <Field label="Description" htmlFor="project-description" error={errors.description?.message}>
+        <Field
+          label="Description"
+          htmlFor="project-description"
+          error={errors.description?.message}
+        >
           <Textarea rows={3} {...register('description')} />
         </Field>
       </form>

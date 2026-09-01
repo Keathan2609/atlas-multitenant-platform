@@ -52,7 +52,10 @@ describe('role/permission matrix', () => {
       const lower = ROLE_PERMISSIONS[ladder[i - 1]!];
       const higher = ROLE_PERMISSIONS[ladder[i]!];
       for (const permission of lower) {
-        expect(higher.has(permission), `${ladder[i]} missing ${permission} held by ${ladder[i - 1]}`).toBe(true);
+        expect(
+          higher.has(permission),
+          `${ladder[i]} missing ${permission} held by ${ladder[i - 1]}`,
+        ).toBe(true);
       }
     }
   });
@@ -85,7 +88,12 @@ describe('canChangeRole — privilege escalation guards', () => {
 
   it('refuses an actor without members.update', () => {
     expect(
-      canChangeRole({ ...base, actorRole: 'MEMBER', targetCurrentRole: 'VIEWER', targetNewRole: 'ADMIN' }),
+      canChangeRole({
+        ...base,
+        actorRole: 'MEMBER',
+        targetCurrentRole: 'VIEWER',
+        targetNewRole: 'ADMIN',
+      }),
     ).toEqual({ allowed: false, reason: 'MISSING_PERMISSION' });
   });
 
@@ -93,17 +101,32 @@ describe('canChangeRole — privilege escalation guards', () => {
     // Without the "cannot grant above your own role" rule, any admin could
     // mint an owner and then have that account promote them.
     expect(
-      canChangeRole({ ...base, actorRole: 'ADMIN', targetCurrentRole: 'MEMBER', targetNewRole: 'OWNER' }),
+      canChangeRole({
+        ...base,
+        actorRole: 'ADMIN',
+        targetCurrentRole: 'MEMBER',
+        targetNewRole: 'OWNER',
+      }),
     ).toEqual({ allowed: false, reason: 'CANNOT_GRANT_ABOVE_OWN_ROLE' });
   });
 
   it('stops an ADMIN demoting an OWNER or a peer ADMIN', () => {
     expect(
-      canChangeRole({ ...base, actorRole: 'ADMIN', targetCurrentRole: 'OWNER', targetNewRole: 'MEMBER' }),
+      canChangeRole({
+        ...base,
+        actorRole: 'ADMIN',
+        targetCurrentRole: 'OWNER',
+        targetNewRole: 'MEMBER',
+      }),
     ).toEqual({ allowed: false, reason: 'TARGET_OUTRANKS_ACTOR' });
 
     expect(
-      canChangeRole({ ...base, actorRole: 'ADMIN', targetCurrentRole: 'ADMIN', targetNewRole: 'VIEWER' }),
+      canChangeRole({
+        ...base,
+        actorRole: 'ADMIN',
+        targetCurrentRole: 'ADMIN',
+        targetNewRole: 'VIEWER',
+      }),
     ).toEqual({ allowed: false, reason: 'TARGET_OUTRANKS_ACTOR' });
   });
 
@@ -150,13 +173,23 @@ describe('canChangeRole — privilege escalation guards', () => {
     // The peer exception is OWNER-only; admins must not be able to demote
     // each other, or one compromised admin account takes the tenant hostage.
     expect(
-      canChangeRole({ ...base, actorRole: 'ADMIN', targetCurrentRole: 'ADMIN', targetNewRole: 'VIEWER' }),
+      canChangeRole({
+        ...base,
+        actorRole: 'ADMIN',
+        targetCurrentRole: 'ADMIN',
+        targetNewRole: 'VIEWER',
+      }),
     ).toEqual({ allowed: false, reason: 'TARGET_OUTRANKS_ACTOR' });
   });
 
   it('allows an ADMIN the moves that are legitimately theirs', () => {
     expect(
-      canChangeRole({ ...base, actorRole: 'ADMIN', targetCurrentRole: 'VIEWER', targetNewRole: 'MEMBER' }),
+      canChangeRole({
+        ...base,
+        actorRole: 'ADMIN',
+        targetCurrentRole: 'VIEWER',
+        targetNewRole: 'MEMBER',
+      }),
     ).toEqual({ allowed: true });
   });
 });
@@ -164,14 +197,24 @@ describe('canChangeRole — privilege escalation guards', () => {
 describe('canRemoveMember — lockout guards', () => {
   it('lets a non-last OWNER leave voluntarily', () => {
     expect(
-      canRemoveMember({ actorRole: 'OWNER', targetRole: 'OWNER', actorIsTarget: true, ownerCount: 2 }),
+      canRemoveMember({
+        actorRole: 'OWNER',
+        targetRole: 'OWNER',
+        actorIsTarget: true,
+        ownerCount: 2,
+      }),
     ).toEqual({ allowed: true });
   });
 
   it('refuses to let the last OWNER leave', () => {
     // The organization would become permanently un-administrable.
     expect(
-      canRemoveMember({ actorRole: 'OWNER', targetRole: 'OWNER', actorIsTarget: true, ownerCount: 1 }),
+      canRemoveMember({
+        actorRole: 'OWNER',
+        targetRole: 'OWNER',
+        actorIsTarget: true,
+        ownerCount: 1,
+      }),
     ).toEqual({ allowed: false, reason: 'LAST_OWNER' });
   });
 
@@ -185,29 +228,54 @@ describe('canRemoveMember — lockout guards', () => {
 
   it('allows an OWNER to remove a peer OWNER while another remains', () => {
     expect(
-      canRemoveMember({ actorRole: 'OWNER', targetRole: 'OWNER', actorIsTarget: false, ownerCount: 2 }),
+      canRemoveMember({
+        actorRole: 'OWNER',
+        targetRole: 'OWNER',
+        actorIsTarget: false,
+        ownerCount: 2,
+      }),
     ).toEqual({ allowed: true });
   });
 
   it('refuses removing the last OWNER even by another OWNER', () => {
     expect(
-      canRemoveMember({ actorRole: 'OWNER', targetRole: 'OWNER', actorIsTarget: false, ownerCount: 1 }),
+      canRemoveMember({
+        actorRole: 'OWNER',
+        targetRole: 'OWNER',
+        actorIsTarget: false,
+        ownerCount: 1,
+      }),
     ).toEqual({ allowed: false, reason: 'LAST_OWNER' });
   });
 
   it('stops an ADMIN removing an OWNER or a peer ADMIN', () => {
     expect(
-      canRemoveMember({ actorRole: 'ADMIN', targetRole: 'OWNER', actorIsTarget: false, ownerCount: 2 }),
+      canRemoveMember({
+        actorRole: 'ADMIN',
+        targetRole: 'OWNER',
+        actorIsTarget: false,
+        ownerCount: 2,
+      }),
     ).toEqual({ allowed: false, reason: 'TARGET_OUTRANKS_ACTOR' });
 
     expect(
-      canRemoveMember({ actorRole: 'ADMIN', targetRole: 'ADMIN', actorIsTarget: false, ownerCount: 2 }),
+      canRemoveMember({
+        actorRole: 'ADMIN',
+        targetRole: 'ADMIN',
+        actorIsTarget: false,
+        ownerCount: 2,
+      }),
     ).toEqual({ allowed: false, reason: 'TARGET_OUTRANKS_ACTOR' });
   });
 
   it('refuses a MEMBER removing anyone else', () => {
     expect(
-      canRemoveMember({ actorRole: 'MEMBER', targetRole: 'VIEWER', actorIsTarget: false, ownerCount: 2 }),
+      canRemoveMember({
+        actorRole: 'MEMBER',
+        targetRole: 'VIEWER',
+        actorIsTarget: false,
+        ownerCount: 2,
+      }),
     ).toEqual({ allowed: false, reason: 'MISSING_PERMISSION' });
   });
 });

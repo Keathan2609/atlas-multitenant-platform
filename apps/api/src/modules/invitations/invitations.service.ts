@@ -265,11 +265,7 @@ export class InvitationsService {
    * forwarded link would let anyone who received it join the organization —
    * the invitation names a person, not merely an org.
    */
-  async accept(
-    userId: string,
-    rawToken: string,
-    requestContext: RequestContext,
-  ) {
+  async accept(userId: string, rawToken: string, requestContext: RequestContext) {
     const user = await this.prisma.unscoped.user.findUnique({
       where: { id: userId },
       select: { id: true, email: true },
@@ -383,10 +379,7 @@ export class InvitationsService {
    */
   private async findLive(rawToken: string) {
     if (!rawToken || rawToken.length < 32) {
-      throw new NotFoundError(
-        ErrorCode.INVITATION_NOT_FOUND,
-        'That invitation link is not valid.',
-      );
+      throw new NotFoundError(ErrorCode.INVITATION_NOT_FOUND, 'That invitation link is not valid.');
     }
 
     // Unscoped by necessity, same reasoning as API-key verification: the token

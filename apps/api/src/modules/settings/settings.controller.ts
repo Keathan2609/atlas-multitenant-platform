@@ -5,7 +5,10 @@ import { Permission } from '@atlas/types';
 import { updateOrganizationSettingsSchema } from '@atlas/validation';
 import { zodBody } from '../../common/http/zod-validation.pipe.js';
 import { RequireTenant, TenantGuard, requireTenant } from '../../common/tenancy/tenant.guard.js';
-import { PermissionsGuard, RequirePermission } from '../../common/authorization/permissions.guard.js';
+import {
+  PermissionsGuard,
+  RequirePermission,
+} from '../../common/authorization/permissions.guard.js';
 import { auditContext } from '../../common/audit/audit.service.js';
 import { requireUser } from '../organizations/organizations.controller.js';
 import { SettingsService, type SettingsInput } from './settings.service.js';

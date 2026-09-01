@@ -163,7 +163,10 @@ export class SessionService {
         data: { lastSeenAt: new Date() },
       });
     } catch (error) {
-      this.logger.debug({ event: 'session.touch_failed', err: error }, 'Could not update lastSeenAt');
+      this.logger.debug(
+        { event: 'session.touch_failed', err: error },
+        'Could not update lastSeenAt',
+      );
     }
   }
 
@@ -183,7 +186,10 @@ export class SessionService {
    * Called on password change, which is what makes a password reset actually
    * evict an attacker who already holds a session cookie.
    */
-  async revokeAllForUser(userId: string, options: { exceptSessionId?: string } = {}): Promise<number> {
+  async revokeAllForUser(
+    userId: string,
+    options: { exceptSessionId?: string } = {},
+  ): Promise<number> {
     const sessions = await this.prisma.unscoped.session.findMany({
       where: {
         userId,

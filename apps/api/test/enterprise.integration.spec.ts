@@ -90,9 +90,7 @@ describe('API keys', () => {
     expect(created.key.startsWith(stored.keyPrefix)).toBe(true);
 
     // And no later read returns it.
-    const listed = await org.agent
-      .get(`/api/v1/organizations/${org.slug}/api-keys`)
-      .expect(200);
+    const listed = await org.agent.get(`/api/v1/organizations/${org.slug}/api-keys`).expect(200);
     expect(JSON.stringify(listed.body)).not.toContain(created.key);
     expect(listed.body.data[0].keyPrefix).toBe(stored.keyPrefix);
   });
@@ -313,9 +311,7 @@ describe('invitations', () => {
     const created = await invite(org, 'newcomer@northstar.example');
     const token = lastInvitationToken(ctx);
 
-    const listed = await org.agent
-      .get(`/api/v1/organizations/${org.slug}/invitations`)
-      .expect(200);
+    const listed = await org.agent.get(`/api/v1/organizations/${org.slug}/invitations`).expect(200);
     expect(JSON.stringify(listed.body)).not.toContain(token);
 
     const entry = await ctx.prisma.auditLog.findFirstOrThrow({
@@ -536,7 +532,9 @@ describe('audit log endpoints', () => {
     expect(secondIds.some((id: string) => firstIds.includes(id))).toBe(false);
 
     // Newest first: every id on page two sorts below every id on page one.
-    expect(Math.max(...secondIds.map((id: string) => id.localeCompare(firstIds[2])))).toBeLessThan(0);
+    expect(Math.max(...secondIds.map((id: string) => id.localeCompare(firstIds[2])))).toBeLessThan(
+      0,
+    );
   });
 
   it('filters by action', async () => {
@@ -615,7 +613,9 @@ describe('organization settings', () => {
       .expect(409);
 
     expect(refused.body.error.code).toBe('CONFLICT');
-    expect((await org.agent.get(`/api/v1/organizations/${org.slug}/settings`)).body.restrictEmailDomains).toBe(false);
+    expect(
+      (await org.agent.get(`/api/v1/organizations/${org.slug}/settings`)).body.restrictEmailDomains,
+    ).toBe(false);
   });
 
   it('records a settings change in the audit log', async () => {

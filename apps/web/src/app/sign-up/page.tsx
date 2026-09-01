@@ -63,7 +63,11 @@ export default function SignUpPage() {
           <h1 className="mt-4 text-lg font-semibold text-fg">Create an account</h1>
         </div>
 
-        <form onSubmit={(event) => void handleSubmit(onSubmit)(event)} noValidate className="flex flex-col gap-4">
+        <form
+          onSubmit={(event) => void handleSubmit(onSubmit)(event)}
+          noValidate
+          className="flex flex-col gap-4"
+        >
           {formError && (
             <p
               role="alert"

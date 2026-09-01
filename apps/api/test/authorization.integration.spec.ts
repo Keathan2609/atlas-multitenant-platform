@@ -347,7 +347,11 @@ describe('audit trail', () => {
     });
 
     expect(entry.actorId).toBe(org.owner.userId);
-    expect(entry.metadata).toMatchObject({ targetUserId: target.userId, from: 'MEMBER', to: 'ADMIN' });
+    expect(entry.metadata).toMatchObject({
+      targetUserId: target.userId,
+      from: 'MEMBER',
+      to: 'ADMIN',
+    });
   });
 
   it('does not write a role-change entry when the change was refused', async () => {

@@ -87,7 +87,9 @@ describe('organization creation', () => {
       ctx.prisma.organizationMembership.findFirst({ where: { organizationId: orgId, userId } }),
       ctx.prisma.organizationSettings.findUnique({ where: { organizationId: orgId } }),
       ctx.prisma.workspace.findFirst({ where: { organizationId: orgId, isDefault: true } }),
-      ctx.prisma.auditLog.findFirst({ where: { organizationId: orgId, action: 'organization.created' } }),
+      ctx.prisma.auditLog.findFirst({
+        where: { organizationId: orgId, action: 'organization.created' },
+      }),
     ]);
 
     expect(membership?.role).toBe('OWNER');
@@ -209,7 +211,7 @@ describe('cross-tenant access prevention', () => {
     expect(survivor.deletedAt).toBeNull();
   });
 
-  it("refuses to change a role in another tenant", async () => {
+  it('refuses to change a role in another tenant', async () => {
     const northstar = await createTenant('Northstar Systems', 'northstar');
     const meridian = await createTenant('Meridian Labs', 'meridian');
 

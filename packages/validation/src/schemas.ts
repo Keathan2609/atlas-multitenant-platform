@@ -101,7 +101,10 @@ export const updateOrganizationSettingsSchema = z
           .string()
           .trim()
           .toLowerCase()
-          .regex(/^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/, 'Enter a valid domain.'),
+          .regex(
+            /^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/,
+            'Enter a valid domain.',
+          ),
       )
       .max(50)
       .optional(),
@@ -262,7 +265,9 @@ export const listWorkItemsSchema = z
     // The literal 'me' resolves to the caller server-side, so the web app does
     // not need the user's own id to build a "my work" filter link.
     assigneeId: z.union([uuidSchema, z.literal('me'), z.literal('unassigned')]).optional(),
-    sortBy: z.enum(['updatedAt', 'createdAt', 'priority', 'status', 'dueDate']).default('updatedAt'),
+    sortBy: z
+      .enum(['updatedAt', 'createdAt', 'priority', 'status', 'dueDate'])
+      .default('updatedAt'),
     sortDirection: sortDirectionSchema,
   })
   .merge(offsetPaginationSchema)

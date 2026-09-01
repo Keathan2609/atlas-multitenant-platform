@@ -103,7 +103,11 @@ function SignInForm() {
   return (
     <SignInFrame>
       <>
-        <form onSubmit={(event) => void handleSubmit(onSubmit)(event)} noValidate className="flex flex-col gap-4">
+        <form
+          onSubmit={(event) => void handleSubmit(onSubmit)(event)}
+          noValidate
+          className="flex flex-col gap-4"
+        >
           {formError && (
             // Page-level, above the fields, and role="alert" so it is announced.
             // A toast would be wrong here: the message explains why the form

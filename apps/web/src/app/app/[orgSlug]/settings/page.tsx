@@ -46,7 +46,10 @@ export default function SettingsPage() {
 
   return (
     <>
-      <PageHeader title="Settings" description="Organization identity, access policy, and deletion." />
+      <PageHeader
+        title="Settings"
+        description="Organization identity, access policy, and deletion."
+      />
 
       <PageBody>
         {error ? (
@@ -123,7 +126,13 @@ function IdentitySection() {
                 {error}
               </span>
             )}
-            <Button variant="primary" size="sm" disabled={!dirty} loading={saving} onClick={() => void save()}>
+            <Button
+              variant="primary"
+              size="sm"
+              disabled={!dirty}
+              loading={saving}
+              onClick={() => void save()}
+            >
               Save name
             </Button>
           </>

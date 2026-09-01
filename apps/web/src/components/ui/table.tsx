@@ -318,20 +318,9 @@ export function Pagination({
  * region boundary, not a floating object. One hairline border and a 6px radius.
  * ══════════════════════════════════════════════════════════════════════════ */
 
-export function Panel({
-  children,
-  className,
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
+export function Panel({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <div
-      className={cx(
-        'overflow-hidden rounded-lg border border-border bg-surface',
-        className,
-      )}
-    >
+    <div className={cx('overflow-hidden rounded-lg border border-border bg-surface', className)}>
       {children}
     </div>
   );

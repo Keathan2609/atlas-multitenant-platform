@@ -42,7 +42,10 @@ export const USERS: SeedUser[] = [
   { key: 'jonas', email: 'jonas.eriksen@meridian.example', displayName: 'Jonas Eriksen' },
 ];
 
-export const NORTHSTAR_MEMBERS: Array<{ user: string; role: 'OWNER' | 'ADMIN' | 'MEMBER' | 'VIEWER' }> = [
+export const NORTHSTAR_MEMBERS: Array<{
+  user: string;
+  role: 'OWNER' | 'ADMIN' | 'MEMBER' | 'VIEWER';
+}> = [
   { user: 'dana', role: 'OWNER' },
   { user: 'marcus', role: 'ADMIN' },
   { user: 'priya', role: 'MEMBER' },
@@ -53,7 +56,10 @@ export const NORTHSTAR_MEMBERS: Array<{ user: string; role: 'OWNER' | 'ADMIN' | 
   { user: 'rosa', role: 'VIEWER' },
 ];
 
-export const MERIDIAN_MEMBERS: Array<{ user: string; role: 'OWNER' | 'ADMIN' | 'MEMBER' | 'VIEWER' }> = [
+export const MERIDIAN_MEMBERS: Array<{
+  user: string;
+  role: 'OWNER' | 'ADMIN' | 'MEMBER' | 'VIEWER';
+}> = [
   { user: 'jonas', role: 'OWNER' },
   { user: 'dana', role: 'ADMIN' },
 ];
@@ -200,43 +206,253 @@ export interface SeedWorkItem {
  */
 export const WORK_ITEMS: SeedWorkItem[] = [
   // Identity Service Migration
-  { project: 'identity', title: 'Move session issuance behind the identity service', type: 'TASK', status: 'IN_PROGRESS', priority: 'URGENT', assignee: 'aisha', reporter: 'dana', dueInDays: 4,
-    description: 'Sessions are still minted by the monolith. Cut over issuance first, keep verification dual-path until the old sessions expire.' },
-  { project: 'identity', title: 'Argon2id parameters need a decision before rollout', type: 'ISSUE', status: 'IN_REVIEW', priority: 'HIGH', assignee: 'aisha', reporter: 'marcus', dueInDays: 2 },
-  { project: 'identity', title: 'Password reset emails are delivered twice when the retry queue drains after a partial SMTP failure', type: 'BUG', status: 'TODO', priority: 'HIGH', assignee: 'ken', reporter: 'rosa', dueInDays: -3 },
-  { project: 'identity', title: 'Document the session revocation contract for downstream services', type: 'TASK', status: 'BACKLOG', priority: 'MEDIUM', reporter: 'aisha' },
-  { project: 'identity', title: 'Remove the legacy /login endpoint', type: 'TASK', status: 'BACKLOG', priority: 'LOW', reporter: 'marcus' },
-  { project: 'identity', title: 'Dual-path verification shim', type: 'TASK', status: 'DONE', priority: 'HIGH', assignee: 'aisha', reporter: 'dana' },
+  {
+    project: 'identity',
+    title: 'Move session issuance behind the identity service',
+    type: 'TASK',
+    status: 'IN_PROGRESS',
+    priority: 'URGENT',
+    assignee: 'aisha',
+    reporter: 'dana',
+    dueInDays: 4,
+    description:
+      'Sessions are still minted by the monolith. Cut over issuance first, keep verification dual-path until the old sessions expire.',
+  },
+  {
+    project: 'identity',
+    title: 'Argon2id parameters need a decision before rollout',
+    type: 'ISSUE',
+    status: 'IN_REVIEW',
+    priority: 'HIGH',
+    assignee: 'aisha',
+    reporter: 'marcus',
+    dueInDays: 2,
+  },
+  {
+    project: 'identity',
+    title:
+      'Password reset emails are delivered twice when the retry queue drains after a partial SMTP failure',
+    type: 'BUG',
+    status: 'TODO',
+    priority: 'HIGH',
+    assignee: 'ken',
+    reporter: 'rosa',
+    dueInDays: -3,
+  },
+  {
+    project: 'identity',
+    title: 'Document the session revocation contract for downstream services',
+    type: 'TASK',
+    status: 'BACKLOG',
+    priority: 'MEDIUM',
+    reporter: 'aisha',
+  },
+  {
+    project: 'identity',
+    title: 'Remove the legacy /login endpoint',
+    type: 'TASK',
+    status: 'BACKLOG',
+    priority: 'LOW',
+    reporter: 'marcus',
+  },
+  {
+    project: 'identity',
+    title: 'Dual-path verification shim',
+    type: 'TASK',
+    status: 'DONE',
+    priority: 'HIGH',
+    assignee: 'aisha',
+    reporter: 'dana',
+  },
 
   // Billing Infrastructure
-  { project: 'billing', title: 'Model the ledger entry schema', type: 'TASK', status: 'IN_PROGRESS', priority: 'HIGH', assignee: 'marcus', reporter: 'dana', dueInDays: 9 },
-  { project: 'billing', title: 'Invoice totals drift by one cent on multi-currency accounts', type: 'BUG', status: 'TODO', priority: 'URGENT', assignee: 'priya', reporter: 'rosa', dueInDays: 1 },
-  { project: 'billing', title: 'Retire the nightly batch job once the ledger is authoritative', type: 'TASK', status: 'BACKLOG', priority: 'MEDIUM', reporter: 'marcus' },
-  { project: 'billing', title: 'Blocked: service-to-service auth pending identity cutover', type: 'ISSUE', status: 'BACKLOG', priority: 'HIGH', assignee: 'marcus', reporter: 'marcus' },
-  { project: 'billing', title: 'Backfill historical invoices into the ledger', type: 'TASK', status: 'BACKLOG', priority: 'LOW', reporter: 'ken' },
+  {
+    project: 'billing',
+    title: 'Model the ledger entry schema',
+    type: 'TASK',
+    status: 'IN_PROGRESS',
+    priority: 'HIGH',
+    assignee: 'marcus',
+    reporter: 'dana',
+    dueInDays: 9,
+  },
+  {
+    project: 'billing',
+    title: 'Invoice totals drift by one cent on multi-currency accounts',
+    type: 'BUG',
+    status: 'TODO',
+    priority: 'URGENT',
+    assignee: 'priya',
+    reporter: 'rosa',
+    dueInDays: 1,
+  },
+  {
+    project: 'billing',
+    title: 'Retire the nightly batch job once the ledger is authoritative',
+    type: 'TASK',
+    status: 'BACKLOG',
+    priority: 'MEDIUM',
+    reporter: 'marcus',
+  },
+  {
+    project: 'billing',
+    title: 'Blocked: service-to-service auth pending identity cutover',
+    type: 'ISSUE',
+    status: 'BACKLOG',
+    priority: 'HIGH',
+    assignee: 'marcus',
+    reporter: 'marcus',
+  },
+  {
+    project: 'billing',
+    title: 'Backfill historical invoices into the ledger',
+    type: 'TASK',
+    status: 'BACKLOG',
+    priority: 'LOW',
+    reporter: 'ken',
+  },
 
   // Developer Portal
-  { project: 'portal', title: 'API key creation flow', type: 'TASK', status: 'DONE', priority: 'HIGH', assignee: 'priya', reporter: 'dana' },
-  { project: 'portal', title: 'Sandbox credentials expire without warning the developer', type: 'BUG', status: 'IN_PROGRESS', priority: 'MEDIUM', assignee: 'priya', reporter: 'tomas', dueInDays: 6 },
-  { project: 'portal', title: 'Add copy-to-clipboard on credential fields', type: 'IMPROVEMENT', status: 'IN_REVIEW', priority: 'LOW', assignee: 'priya', reporter: 'rosa' },
-  { project: 'portal', title: 'Search across the documentation set', type: 'TASK', status: 'TODO', priority: 'MEDIUM', reporter: 'priya', dueInDays: 14 },
-  { project: 'portal', title: 'Dark mode for embedded code samples', type: 'IMPROVEMENT', status: 'BACKLOG', priority: 'LOW', reporter: 'tomas' },
-  { project: 'portal', title: 'Rewrite the getting-started guide against the v1 API', type: 'TASK', status: 'BACKLOG', priority: 'MEDIUM', assignee: 'rosa', reporter: 'priya' },
+  {
+    project: 'portal',
+    title: 'API key creation flow',
+    type: 'TASK',
+    status: 'DONE',
+    priority: 'HIGH',
+    assignee: 'priya',
+    reporter: 'dana',
+  },
+  {
+    project: 'portal',
+    title: 'Sandbox credentials expire without warning the developer',
+    type: 'BUG',
+    status: 'IN_PROGRESS',
+    priority: 'MEDIUM',
+    assignee: 'priya',
+    reporter: 'tomas',
+    dueInDays: 6,
+  },
+  {
+    project: 'portal',
+    title: 'Add copy-to-clipboard on credential fields',
+    type: 'IMPROVEMENT',
+    status: 'IN_REVIEW',
+    priority: 'LOW',
+    assignee: 'priya',
+    reporter: 'rosa',
+  },
+  {
+    project: 'portal',
+    title: 'Search across the documentation set',
+    type: 'TASK',
+    status: 'TODO',
+    priority: 'MEDIUM',
+    reporter: 'priya',
+    dueInDays: 14,
+  },
+  {
+    project: 'portal',
+    title: 'Dark mode for embedded code samples',
+    type: 'IMPROVEMENT',
+    status: 'BACKLOG',
+    priority: 'LOW',
+    reporter: 'tomas',
+  },
+  {
+    project: 'portal',
+    title: 'Rewrite the getting-started guide against the v1 API',
+    type: 'TASK',
+    status: 'BACKLOG',
+    priority: 'MEDIUM',
+    assignee: 'rosa',
+    reporter: 'priya',
+  },
 
   // Q4 Reliability Initiative
-  { project: 'reliability', title: 'Identify the remaining single points of failure', type: 'TASK', status: 'IN_PROGRESS', priority: 'HIGH', assignee: 'tomas', reporter: 'dana', dueInDays: 11 },
-  { project: 'reliability', title: 'p99 checkout latency exceeds the 400ms objective under load', type: 'ISSUE', status: 'TODO', priority: 'URGENT', assignee: 'tomas', reporter: 'marcus', dueInDays: -1 },
-  { project: 'reliability', title: 'Connection pool saturates during the nightly batch window', type: 'BUG', status: 'TODO', priority: 'HIGH', assignee: 'ken', reporter: 'tomas', dueInDays: 5 },
-  { project: 'reliability', title: 'Add read replicas for the reporting queries', type: 'TASK', status: 'BACKLOG', priority: 'MEDIUM', reporter: 'tomas' },
-  { project: 'reliability', title: 'Chaos test the failover path', type: 'TASK', status: 'BACKLOG', priority: 'MEDIUM', reporter: 'aisha' },
+  {
+    project: 'reliability',
+    title: 'Identify the remaining single points of failure',
+    type: 'TASK',
+    status: 'IN_PROGRESS',
+    priority: 'HIGH',
+    assignee: 'tomas',
+    reporter: 'dana',
+    dueInDays: 11,
+  },
+  {
+    project: 'reliability',
+    title: 'p99 checkout latency exceeds the 400ms objective under load',
+    type: 'ISSUE',
+    status: 'TODO',
+    priority: 'URGENT',
+    assignee: 'tomas',
+    reporter: 'marcus',
+    dueInDays: -1,
+  },
+  {
+    project: 'reliability',
+    title: 'Connection pool saturates during the nightly batch window',
+    type: 'BUG',
+    status: 'TODO',
+    priority: 'HIGH',
+    assignee: 'ken',
+    reporter: 'tomas',
+    dueInDays: 5,
+  },
+  {
+    project: 'reliability',
+    title: 'Add read replicas for the reporting queries',
+    type: 'TASK',
+    status: 'BACKLOG',
+    priority: 'MEDIUM',
+    reporter: 'tomas',
+  },
+  {
+    project: 'reliability',
+    title: 'Chaos test the failover path',
+    type: 'TASK',
+    status: 'BACKLOG',
+    priority: 'MEDIUM',
+    reporter: 'aisha',
+  },
 
   // Search Relevance Rework (paused)
-  { project: 'search', title: 'Evaluate whether Postgres full-text is sufficient', type: 'TASK', status: 'BACKLOG', priority: 'LOW', reporter: 'priya' },
-  { project: 'search', title: 'Relevance scoring spike', type: 'TASK', status: 'CANCELLED', priority: 'LOW', reporter: 'priya' },
+  {
+    project: 'search',
+    title: 'Evaluate whether Postgres full-text is sufficient',
+    type: 'TASK',
+    status: 'BACKLOG',
+    priority: 'LOW',
+    reporter: 'priya',
+  },
+  {
+    project: 'search',
+    title: 'Relevance scoring spike',
+    type: 'TASK',
+    status: 'CANCELLED',
+    priority: 'LOW',
+    reporter: 'priya',
+  },
 
   // Legacy Reporting Decommission (completed)
-  { project: 'legacy-reporting', title: 'Export historical reports to cold storage', type: 'TASK', status: 'DONE', priority: 'MEDIUM', assignee: 'ken', reporter: 'marcus' },
-  { project: 'legacy-reporting', title: 'Decommission the 2019 reporting cluster', type: 'TASK', status: 'DONE', priority: 'MEDIUM', assignee: 'tomas', reporter: 'marcus' },
+  {
+    project: 'legacy-reporting',
+    title: 'Export historical reports to cold storage',
+    type: 'TASK',
+    status: 'DONE',
+    priority: 'MEDIUM',
+    assignee: 'ken',
+    reporter: 'marcus',
+  },
+  {
+    project: 'legacy-reporting',
+    title: 'Decommission the 2019 reporting cluster',
+    type: 'TASK',
+    status: 'DONE',
+    priority: 'MEDIUM',
+    assignee: 'tomas',
+    reporter: 'marcus',
+  },
 ];
 
 /** Meridian is intentionally sparse — it exists to prove isolation, not to be explored. */
@@ -251,6 +467,21 @@ export const MERIDIAN_PROJECTS = [
 ];
 
 export const MERIDIAN_WORK_ITEMS: Array<Omit<SeedWorkItem, 'project'> & { project: string }> = [
-  { project: 'instrument', title: 'Normalise vendor timestamp formats', type: 'TASK', status: 'IN_PROGRESS', priority: 'HIGH', assignee: 'jonas', reporter: 'jonas' },
-  { project: 'instrument', title: 'Backpressure when the ingest queue is saturated', type: 'BUG', status: 'TODO', priority: 'MEDIUM', reporter: 'jonas' },
+  {
+    project: 'instrument',
+    title: 'Normalise vendor timestamp formats',
+    type: 'TASK',
+    status: 'IN_PROGRESS',
+    priority: 'HIGH',
+    assignee: 'jonas',
+    reporter: 'jonas',
+  },
+  {
+    project: 'instrument',
+    title: 'Backpressure when the ingest queue is saturated',
+    type: 'BUG',
+    status: 'TODO',
+    priority: 'MEDIUM',
+    reporter: 'jonas',
+  },
 ];

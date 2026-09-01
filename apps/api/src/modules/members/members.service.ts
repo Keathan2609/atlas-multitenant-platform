@@ -100,7 +100,15 @@ export class MembersService {
           id: true,
           role: true,
           joinedAt: true,
-          user: { select: { id: true, email: true, displayName: true, avatarUrl: true, lastLoginAt: true } },
+          user: {
+            select: {
+              id: true,
+              email: true,
+              displayName: true,
+              avatarUrl: true,
+              lastLoginAt: true,
+            },
+          },
         },
         orderBy,
         skip: (query.page - 1) * query.pageSize,

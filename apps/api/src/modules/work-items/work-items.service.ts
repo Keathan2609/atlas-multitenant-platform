@@ -1,6 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { newId } from '@atlas/database';
-import type { CreateWorkItemInput, ListWorkItemsInput, UpdateWorkItemInput } from '@atlas/validation';
+import type {
+  CreateWorkItemInput,
+  ListWorkItemsInput,
+  UpdateWorkItemInput,
+} from '@atlas/validation';
 import type { TenantContext } from '../../common/http/express.js';
 import { PrismaService } from '../../common/database/prisma.service.js';
 import { ErrorCode, NotFoundError } from '../../common/errors/app-error.js';
@@ -172,11 +176,7 @@ export class WorkItemsService {
     return { ...item, reference: `${item.project.key}-${item.number}` };
   }
 
-  async update(
-    tenant: TenantContext,
-    workItemId: string,
-    input: UpdateWorkItemInput,
-  ) {
+  async update(tenant: TenantContext, workItemId: string, input: UpdateWorkItemInput) {
     const db = this.prisma.forTenant(tenant.organizationId);
 
     const existing = await db.workItem.findFirst({

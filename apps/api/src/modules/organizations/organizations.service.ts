@@ -61,7 +61,10 @@ export class OrganizationsService {
    * write below sets organizationId explicitly from the id generated here.
    */
   async create(command: CreateOrganizationCommand) {
-    const slug = await this.resolveSlug(command.slug ?? slugify(command.name), Boolean(command.slug));
+    const slug = await this.resolveSlug(
+      command.slug ?? slugify(command.name),
+      Boolean(command.slug),
+    );
 
     const organizationId = newId();
     const now = new Date();
@@ -193,7 +196,12 @@ export class OrganizationsService {
     };
   }
 
-  async update(tenant: TenantContext, actorId: string, input: { name?: string }, requestContext: Pick<AuditEvent, 'ipAddress' | 'userAgent'>) {
+  async update(
+    tenant: TenantContext,
+    actorId: string,
+    input: { name?: string },
+    requestContext: Pick<AuditEvent, 'ipAddress' | 'userAgent'>,
+  ) {
     const db = this.prisma.forTenant(tenant.organizationId);
 
     const updated = await db.organization.update({

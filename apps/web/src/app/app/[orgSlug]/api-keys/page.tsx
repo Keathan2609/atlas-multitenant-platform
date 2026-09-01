@@ -59,7 +59,11 @@ export default function ApiKeysPage() {
           <ErrorState error={query.error} onRetry={() => void query.refetch()} />
         ) : (
           <Panel>
-            <KeysTable rows={query.data?.data ?? []} loading={query.isFetching} onCreate={() => setCreating(true)} />
+            <KeysTable
+              rows={query.data?.data ?? []}
+              loading={query.isFetching}
+              onCreate={() => setCreating(true)}
+            />
           </Panel>
         )}
       </PageBody>
@@ -291,13 +295,21 @@ function CreateKeyDialog({
               Cancel
             </Button>
           </DialogClose>
-          <Button variant="primary" loading={isSubmitting} onClick={(event) => void handleSubmit(onSubmit)(event)}>
+          <Button
+            variant="primary"
+            loading={isSubmitting}
+            onClick={(event) => void handleSubmit(onSubmit)(event)}
+          >
             Create key
           </Button>
         </>
       }
     >
-      <form onSubmit={(event) => void handleSubmit(onSubmit)(event)} noValidate className="flex flex-col gap-4">
+      <form
+        onSubmit={(event) => void handleSubmit(onSubmit)(event)}
+        noValidate
+        className="flex flex-col gap-4"
+      >
         {formError && (
           <p
             role="alert"
@@ -314,7 +326,12 @@ function CreateKeyDialog({
           error={errors.name?.message}
           required
         >
-          <Input autoFocus placeholder="CI deploy" invalid={Boolean(errors.name)} {...register('name')} />
+          <Input
+            autoFocus
+            placeholder="CI deploy"
+            invalid={Boolean(errors.name)}
+            {...register('name')}
+          />
         </Field>
 
         <Field

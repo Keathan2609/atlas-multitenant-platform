@@ -1,11 +1,26 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Patch,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import type { Request } from 'express';
 import { Permission } from '@atlas/types';
 import { addTeamMemberSchema, createTeamSchema, updateTeamSchema } from '@atlas/validation';
 import { zodBody } from '../../common/http/zod-validation.pipe.js';
 import { RequireTenant, TenantGuard, requireTenant } from '../../common/tenancy/tenant.guard.js';
-import { PermissionsGuard, RequirePermission } from '../../common/authorization/permissions.guard.js';
+import {
+  PermissionsGuard,
+  RequirePermission,
+} from '../../common/authorization/permissions.guard.js';
 import { auditContext } from '../../common/audit/audit.service.js';
 import { requireUser } from '../organizations/organizations.controller.js';
 import { TeamsService, type TeamInput } from './teams.service.js';
@@ -40,7 +55,12 @@ export class TeamsController {
     @Body(zodBody(createTeamSchema)) input: TeamInput,
     @Req() request: Request,
   ) {
-    return this.teams.create(requireTenant(request), requireUser(request).id, input, auditContext(request));
+    return this.teams.create(
+      requireTenant(request),
+      requireUser(request).id,
+      input,
+      auditContext(request),
+    );
   }
 
   @Patch(':teamId')
@@ -52,7 +72,13 @@ export class TeamsController {
     @Body(zodBody(updateTeamSchema)) input: Partial<TeamInput>,
     @Req() request: Request,
   ) {
-    return this.teams.update(requireTenant(request), requireUser(request).id, id, input, auditContext(request));
+    return this.teams.update(
+      requireTenant(request),
+      requireUser(request).id,
+      id,
+      input,
+      auditContext(request),
+    );
   }
 
   @Delete(':teamId')
@@ -60,7 +86,12 @@ export class TeamsController {
   @RequirePermission(Permission.TEAMS_DELETE)
   @ApiOperation({ summary: 'Delete a team, unassigning its projects' })
   async remove(@Param('orgSlug') _s: string, @Param('teamId') id: string, @Req() request: Request) {
-    await this.teams.remove(requireTenant(request), requireUser(request).id, id, auditContext(request));
+    await this.teams.remove(
+      requireTenant(request),
+      requireUser(request).id,
+      id,
+      auditContext(request),
+    );
   }
 
   @Post(':teamId/members')

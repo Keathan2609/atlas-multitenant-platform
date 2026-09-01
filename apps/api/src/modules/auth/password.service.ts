@@ -34,10 +34,7 @@ const ARGON2_OPTIONS = {
 let dummyHashPromise: Promise<string> | undefined;
 
 function getDummyHash(): Promise<string> {
-  dummyHashPromise ??= argon2.hash(
-    'atlas-timing-equaliser-not-a-real-password',
-    ARGON2_OPTIONS,
-  );
+  dummyHashPromise ??= argon2.hash('atlas-timing-equaliser-not-a-real-password', ARGON2_OPTIONS);
   return dummyHashPromise;
 }
 

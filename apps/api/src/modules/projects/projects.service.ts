@@ -155,7 +155,11 @@ export class ProjectsService {
       }
     }
 
-    const key = await this.resolveKey(tenant, input.key ?? deriveKey(input.name), Boolean(input.key));
+    const key = await this.resolveKey(
+      tenant,
+      input.key ?? deriveKey(input.name),
+      Boolean(input.key),
+    );
 
     const project = await db.project.create({
       data: {

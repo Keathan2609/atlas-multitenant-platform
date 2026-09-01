@@ -101,15 +101,10 @@ export function ErrorState({
   return (
     <div
       role="alert"
-      className={cx(
-        'rounded-lg border border-danger-border bg-danger-subtle px-4 py-3',
-        className,
-      )}
+      className={cx('rounded-lg border border-danger-border bg-danger-subtle px-4 py-3', className)}
     >
       <p className="text-base font-medium text-fg">{title}</p>
-      <p className="mt-1 text-sm leading-relaxed text-fg-secondary">
-        {description}
-      </p>
+      <p className="mt-1 text-sm leading-relaxed text-fg-secondary">{description}</p>
 
       {requestId && (
         <p className="mt-2 text-xs text-fg-tertiary">
@@ -166,7 +161,8 @@ export function describeError(error: unknown): {
     if (error.status >= 500) {
       return {
         title: 'Something went wrong on our side',
-        description: 'The request did not complete. Quote the reference below if you contact support.',
+        description:
+          'The request did not complete. Quote the reference below if you contact support.',
         retryable: true,
         requestId: error.requestId,
       };

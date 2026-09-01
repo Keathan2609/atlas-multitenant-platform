@@ -25,15 +25,12 @@ const BUTTON_BASE =
   'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent';
 
 const BUTTON_VARIANTS: Record<ButtonVariant, string> = {
-  primary:
-    'bg-accent text-white hover:bg-accent-hover active:bg-accent-active',
+  primary: 'bg-accent text-white hover:bg-accent-hover active:bg-accent-active',
   secondary:
     'bg-surface text-fg border border-border-strong ' +
     'hover:bg-surface-hover active:bg-surface-active',
-  ghost:
-    'bg-transparent text-fg-secondary hover:bg-surface-hover hover:text-fg',
-  danger:
-    'bg-danger text-white hover:bg-danger-hover',
+  ghost: 'bg-transparent text-fg-secondary hover:bg-surface-hover hover:text-fg',
+  danger: 'bg-danger text-white hover:bg-danger-hover',
 };
 
 const BUTTON_SIZES: Record<ButtonSize, string> = {
@@ -71,9 +68,19 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function 
 
 export function Spinner({ className }: { className?: string }) {
   return (
-    <svg className={cx('animate-spin', className)} viewBox="0 0 16 16" fill="none" aria-hidden="true">
+    <svg
+      className={cx('animate-spin', className)}
+      viewBox="0 0 16 16"
+      fill="none"
+      aria-hidden="true"
+    >
       <circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeOpacity="0.25" strokeWidth="2" />
-      <path d="M14.5 8A6.5 6.5 0 0 0 8 1.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path
+        d="M14.5 8A6.5 6.5 0 0 0 8 1.5"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
@@ -151,8 +158,7 @@ const STATUS_TONE: Record<string, string> = {
   EXPIRED: 'text-fg-tertiary bg-surface-sunken border-border',
 };
 
-const DEFAULT_TONE =
-  'text-fg-secondary bg-surface-sunken border-border';
+const DEFAULT_TONE = 'text-fg-secondary bg-surface-sunken border-border';
 
 /** Turns BACKLOG into Backlog, IN_PROGRESS into In progress. */
 export function humanise(value: string): string {

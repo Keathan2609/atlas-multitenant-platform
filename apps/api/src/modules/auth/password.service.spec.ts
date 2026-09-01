@@ -16,7 +16,10 @@ describe('PasswordService', () => {
   it('produces a different hash each time for the same password', async () => {
     // Argon2 salts internally. Identical hashes would mean a missing salt,
     // which makes the whole table rainbow-table-able at once.
-    const [a, b] = await Promise.all([passwords.hash('same password here'), passwords.hash('same password here')]);
+    const [a, b] = await Promise.all([
+      passwords.hash('same password here'),
+      passwords.hash('same password here'),
+    ]);
     expect(a).not.toBe(b);
   });
 

@@ -2,7 +2,10 @@
   "name": "@atlas/config",
   "version": "0.1.0",
   "private": true,
-  "files": ["typescript", "eslint"],
+  "files": [
+    "typescript",
+    "eslint"
+  ],
   "exports": {
     "./typescript/*": "./typescript/*",
     "./eslint/*": "./eslint/*"

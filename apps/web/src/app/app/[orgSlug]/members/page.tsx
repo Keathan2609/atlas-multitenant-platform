@@ -16,11 +16,23 @@ import { PageBody, PageHeader, useTenant } from '@/components/app-shell';
 import { Avatar, Button, Field, Input, Select, StatusBadge } from '@/components/ui/primitives';
 import { DataTable, Pagination, Panel, PanelHeader, type Column } from '@/components/ui/table';
 import { Dialog, DialogClose, ConfirmDialog } from '@/components/ui/dialog';
-import { EmptyState, ErrorState, ForbiddenState, NoResultsState, describeError } from '@/components/ui/states';
+import {
+  EmptyState,
+  ErrorState,
+  ForbiddenState,
+  NoResultsState,
+  describeError,
+} from '@/components/ui/states';
 import { SearchInput, SelectFilter } from '@/components/ui/filters';
 import { RowMenu } from '@/components/ui/row-menu';
 import { ApiError, api, applyFieldErrors } from '@/lib/api';
-import { keys, useInvitations, useMembers, type InvitationRow, type MemberRow } from '@/lib/queries';
+import {
+  keys,
+  useInvitations,
+  useMembers,
+  type InvitationRow,
+  type MemberRow,
+} from '@/lib/queries';
 import { useListParams } from '@/lib/use-list-params';
 import { relativeTime, shortDate } from '@/lib/format';
 
@@ -116,7 +128,9 @@ export default function MembersPage() {
               sort={{ id: params.sortBy, direction: params.sortDirection }}
               onSortChange={params.setSort}
               empty={
-                filtered ? <NoResultsState onClear={params.clear} /> : (
+                filtered ? (
+                  <NoResultsState onClear={params.clear} />
+                ) : (
                   <EmptyState title="No members" description="This organization has no members." />
                 )
               }
@@ -192,9 +206,7 @@ function MembersTable({
       // The server enforces rules the client cannot fully predict — last owner,
       // rank comparison — so its refusal is surfaced verbatim rather than
       // guessed at.
-      setActionError(
-        error instanceof ApiError ? error.message : describeError(error).description,
-      );
+      setActionError(error instanceof ApiError ? error.message : describeError(error).description);
     }
   }
 
@@ -207,9 +219,7 @@ function MembersTable({
       await refresh();
       setRemoving(null);
     } catch (error) {
-      setActionError(
-        error instanceof ApiError ? error.message : describeError(error).description,
-      );
+      setActionError(error instanceof ApiError ? error.message : describeError(error).description);
     } finally {
       setPending(false);
     }
@@ -302,7 +312,8 @@ function MembersTable({
       align: 'right',
       render: (member) => {
         const isSelf = member.userId === tenant.user.id;
-        const canRemove = isSelf || (tenant.can(Permission.MEMBERS_REMOVE) && assignable.includes(member.role));
+        const canRemove =
+          isSelf || (tenant.can(Permission.MEMBERS_REMOVE) && assignable.includes(member.role));
         if (!canRemove) return null;
 
         return (
@@ -351,9 +362,7 @@ function MembersTable({
             setActionError(null);
           }
         }}
-        title={
-          removing?.userId === tenant.user.id ? 'Leave organization' : 'Remove member'
-        }
+        title={removing?.userId === tenant.user.id ? 'Leave organization' : 'Remove member'}
         description={
           removing?.userId === tenant.user.id
             ? `You will lose access to ${tenant.organization.name} immediately. An owner or admin would need to invite you back.`
@@ -434,7 +443,11 @@ function InvitationsTable({ rows, loading }: { rows: InvitationRow[]; loading: b
         <RowMenu
           label={`Actions for the invitation to ${invitation.email}`}
           items={[
-            { label: 'Revoke invitation', destructive: true, onSelect: () => setRevoking(invitation) },
+            {
+              label: 'Revoke invitation',
+              destructive: true,
+              onSelect: () => setRevoking(invitation),
+            },
           ]}
         />
       ),
@@ -518,9 +531,7 @@ function InviteDialog({
       onOpenChange(false);
     } catch (error) {
       if (!applyFieldErrors(error, setError as never)) {
-        setFormError(
-          error instanceof ApiError ? error.message : describeError(error).description,
-        );
+        setFormError(error instanceof ApiError ? error.message : describeError(error).description);
       }
     }
   }
@@ -538,13 +549,21 @@ function InviteDialog({
               Cancel
             </Button>
           </DialogClose>
-          <Button variant="primary" loading={isSubmitting} onClick={(event) => void handleSubmit(onSubmit)(event)}>
+          <Button
+            variant="primary"
+            loading={isSubmitting}
+            onClick={(event) => void handleSubmit(onSubmit)(event)}
+          >
             Send invitation
           </Button>
         </>
       }
     >
-      <form onSubmit={(event) => void handleSubmit(onSubmit)(event)} noValidate className="flex flex-col gap-4">
+      <form
+        onSubmit={(event) => void handleSubmit(onSubmit)(event)}
+        noValidate
+        className="flex flex-col gap-4"
+      >
         {formError && (
           <p
             role="alert"

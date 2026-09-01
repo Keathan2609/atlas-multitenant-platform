@@ -65,7 +65,9 @@ export default function OverviewPage() {
             query={needsAttention}
             emptyTitle="Nothing urgent"
             emptyDescription="No urgent work is waiting to be picked up."
-            renderRow={(item) => <WorkItemLine key={item.id} item={item} slug={tenant.slug} showProject />}
+            renderRow={(item) => (
+              <WorkItemLine key={item.id} item={item} slug={tenant.slug} showProject />
+            )}
           />
         )}
 
@@ -77,7 +79,9 @@ export default function OverviewPage() {
             query={myWork}
             emptyTitle="Nothing assigned to you"
             emptyDescription="Work assigned to you will appear here."
-            renderRow={(item) => <WorkItemLine key={item.id} item={item} slug={tenant.slug} showProject />}
+            renderRow={(item) => (
+              <WorkItemLine key={item.id} item={item} slug={tenant.slug} showProject />
+            )}
           />
         )}
 

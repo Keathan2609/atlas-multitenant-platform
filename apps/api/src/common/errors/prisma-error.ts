@@ -50,8 +50,5 @@ export function translatePrismaError(error: unknown): AppError | undefined {
   const message = typeof candidate.message === 'string' ? candidate.message : '';
   if (!message.includes('Error creating UUID')) return undefined;
 
-  return new NotFoundError(
-    ErrorCode.NOT_FOUND,
-    'The requested resource could not be found.',
-  );
+  return new NotFoundError(ErrorCode.NOT_FOUND, 'The requested resource could not be found.');
 }

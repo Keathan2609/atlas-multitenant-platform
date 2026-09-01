@@ -1,11 +1,26 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Patch,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import type { Request } from 'express';
 import { Permission } from '@atlas/types';
 import { createWorkspaceSchema, updateWorkspaceSchema } from '@atlas/validation';
 import { zodBody } from '../../common/http/zod-validation.pipe.js';
 import { RequireTenant, TenantGuard, requireTenant } from '../../common/tenancy/tenant.guard.js';
-import { PermissionsGuard, RequirePermission } from '../../common/authorization/permissions.guard.js';
+import {
+  PermissionsGuard,
+  RequirePermission,
+} from '../../common/authorization/permissions.guard.js';
 import { auditContext } from '../../common/audit/audit.service.js';
 import { requireUser } from '../organizations/organizations.controller.js';
 import { WorkspacesService, type WorkspaceInput } from './workspaces.service.js';
@@ -40,7 +55,12 @@ export class WorkspacesController {
     @Body(zodBody(createWorkspaceSchema)) input: WorkspaceInput,
     @Req() request: Request,
   ) {
-    return this.workspaces.create(requireTenant(request), requireUser(request).id, input, auditContext(request));
+    return this.workspaces.create(
+      requireTenant(request),
+      requireUser(request).id,
+      input,
+      auditContext(request),
+    );
   }
 
   @Patch(':workspaceId')
@@ -52,14 +72,29 @@ export class WorkspacesController {
     @Body(zodBody(updateWorkspaceSchema)) input: Partial<WorkspaceInput>,
     @Req() request: Request,
   ) {
-    return this.workspaces.update(requireTenant(request), requireUser(request).id, id, input, auditContext(request));
+    return this.workspaces.update(
+      requireTenant(request),
+      requireUser(request).id,
+      id,
+      input,
+      auditContext(request),
+    );
   }
 
   @Delete(':workspaceId')
   @HttpCode(HttpStatus.NO_CONTENT)
   @RequirePermission(Permission.WORKSPACES_DELETE)
   @ApiOperation({ summary: 'Delete an empty, non-default workspace' })
-  async remove(@Param('orgSlug') _s: string, @Param('workspaceId') id: string, @Req() request: Request) {
-    await this.workspaces.remove(requireTenant(request), requireUser(request).id, id, auditContext(request));
+  async remove(
+    @Param('orgSlug') _s: string,
+    @Param('workspaceId') id: string,
+    @Req() request: Request,
+  ) {
+    await this.workspaces.remove(
+      requireTenant(request),
+      requireUser(request).id,
+      id,
+      auditContext(request),
+    );
   }
 }

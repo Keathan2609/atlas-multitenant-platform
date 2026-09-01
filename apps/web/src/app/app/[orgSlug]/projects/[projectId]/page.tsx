@@ -89,11 +89,7 @@ export default function ProjectDetailPage() {
               title="This project does not exist"
               description="It may have been deleted, or the link may be wrong."
               action={
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  onClick={() => history.back()}
-                >
+                <Button size="sm" variant="secondary" onClick={() => history.back()}>
                   Go back
                 </Button>
               }
@@ -336,11 +332,13 @@ function ProjectWorkItems({ project }: { project: ProjectDetail }) {
             size="compact"
             title={status ? 'No items with that status' : 'No work items in this project'}
             {...(status
-              ? { action: (
-                  <Button size="sm" variant="secondary" onClick={() => setStatus('')}>
-                    Clear filter
-                  </Button>
-                ) }
+              ? {
+                  action: (
+                    <Button size="sm" variant="secondary" onClick={() => setStatus('')}>
+                      Clear filter
+                    </Button>
+                  ),
+                }
               : {})}
           />
         }

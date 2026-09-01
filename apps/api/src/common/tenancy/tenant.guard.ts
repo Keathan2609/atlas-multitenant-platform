@@ -5,7 +5,12 @@ import type { Logger } from '@atlas/observability';
 import { Inject } from '@nestjs/common';
 import { LOGGER_TOKEN } from '../logging/logger.provider.js';
 import { PrismaService } from '../database/prisma.service.js';
-import { ErrorCode, ForbiddenError, NotFoundError, UnauthenticatedError } from '../errors/app-error.js';
+import {
+  ErrorCode,
+  ForbiddenError,
+  NotFoundError,
+  UnauthenticatedError,
+} from '../errors/app-error.js';
 
 /** Marks a route as operating inside an organization. */
 export const REQUIRES_TENANT = 'atlas:requiresTenant';

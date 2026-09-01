@@ -134,9 +134,7 @@ describe('credential hygiene', () => {
 
     // Read it back through the API too — the audit log is admin-readable, so
     // the response matters as much as the row.
-    const viaApi = await owner.agent
-      .get(`/api/v1/organizations/${slug}/audit-logs`)
-      .expect(200);
+    const viaApi = await owner.agent.get(`/api/v1/organizations/${slug}/audit-logs`).expect(200);
 
     const serialised = JSON.stringify(viaApi.body);
     expect(serialised).not.toContain(apiKey);

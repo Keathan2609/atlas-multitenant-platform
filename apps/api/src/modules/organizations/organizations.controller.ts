@@ -23,7 +23,10 @@ import {
 import { zodBody } from '../../common/http/zod-validation.pipe.js';
 import { RateLimit, RateLimitGuard } from '../../common/http/rate-limit.guard.js';
 import { RequireTenant, TenantGuard, requireTenant } from '../../common/tenancy/tenant.guard.js';
-import { PermissionsGuard, RequirePermission } from '../../common/authorization/permissions.guard.js';
+import {
+  PermissionsGuard,
+  RequirePermission,
+} from '../../common/authorization/permissions.guard.js';
 import { UnauthenticatedError } from '../../common/errors/app-error.js';
 import { auditContext } from '../../common/audit/audit.service.js';
 import { OrganizationsService } from './organizations.service.js';

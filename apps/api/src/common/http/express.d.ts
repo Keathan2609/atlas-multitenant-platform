@@ -35,7 +35,6 @@ export interface TenantContext {
 }
 
 declare global {
-   
   // augmentation pattern requires declaration merging into this namespace.
   namespace Express {
     interface Request {

@@ -17,7 +17,10 @@ import { Permission, assignableRoles, type OrganizationRole } from '@atlas/types
 import { listMembersSchema, updateMemberRoleSchema } from '@atlas/validation';
 import { zodBody, zodQuery } from '../../common/http/zod-validation.pipe.js';
 import { RequireTenant, TenantGuard, requireTenant } from '../../common/tenancy/tenant.guard.js';
-import { PermissionsGuard, RequirePermission } from '../../common/authorization/permissions.guard.js';
+import {
+  PermissionsGuard,
+  RequirePermission,
+} from '../../common/authorization/permissions.guard.js';
 import { auditContext } from '../../common/audit/audit.service.js';
 import { requireUser } from '../organizations/organizations.controller.js';
 import { MembersService, type ListMembersQuery } from './members.service.js';

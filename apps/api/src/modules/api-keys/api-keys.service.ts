@@ -62,7 +62,9 @@ export class ApiKeysService {
    * intended emergency lever.
    */
   private hash(rawKey: string): string {
-    return createHash('sha256').update(`${rawKey}${this.config.API_KEY_PEPPER}`, 'utf8').digest('hex');
+    return createHash('sha256')
+      .update(`${rawKey}${this.config.API_KEY_PEPPER}`, 'utf8')
+      .digest('hex');
   }
 
   /**
@@ -265,7 +267,10 @@ export class ApiKeysService {
         data: { lastUsedAt: new Date() },
       });
     } catch (error) {
-      this.logger.debug({ event: 'apikey.touch_failed', err: error }, 'Could not update lastUsedAt');
+      this.logger.debug(
+        { event: 'apikey.touch_failed', err: error },
+        'Could not update lastUsedAt',
+      );
     }
   }
 }

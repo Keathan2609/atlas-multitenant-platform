@@ -5,7 +5,10 @@ import { Permission } from '@atlas/types';
 import { listAuditLogsSchema, type ListAuditLogsInput } from '@atlas/validation';
 import { zodQuery } from '../../common/http/zod-validation.pipe.js';
 import { RequireTenant, TenantGuard, requireTenant } from '../../common/tenancy/tenant.guard.js';
-import { PermissionsGuard, RequirePermission } from '../../common/authorization/permissions.guard.js';
+import {
+  PermissionsGuard,
+  RequirePermission,
+} from '../../common/authorization/permissions.guard.js';
 import { AuditLogService } from './audit-log.service.js';
 
 /**
