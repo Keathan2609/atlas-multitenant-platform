@@ -27,11 +27,11 @@ jobs:
     timeout-minutes: 15
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
           cache: pnpm
@@ -59,9 +59,9 @@ jobs:
     timeout-minutes: 15
 
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
           cache: pnpm
@@ -110,9 +110,9 @@ jobs:
           --health-retries 20
 
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
           cache: pnpm
@@ -183,9 +183,9 @@ jobs:
           --health-retries 20
 
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
           cache: pnpm
@@ -201,13 +201,19 @@ jobs:
             echo "API_KEY_PEPPER=$(openssl rand -hex 32)"
           } >> .env
 
+      # Build first. The seed imports the generated Prisma client, and running
+      # it before anything had generated one is what failed this job on its
+      # first real run — `Cannot find module '.prisma/client/default'`. The
+      # seed script now generates for itself, so this ordering is belt and
+      # braces rather than the fix, but building before seeding is the honest
+      # order anyway: nothing here needs a database.
+      - name: Build
+        run: pnpm build
+
       - name: Migrate and seed
         run: |
           pnpm db:migrate:deploy
           pnpm db:seed
-
-      - name: Build
-        run: pnpm build
 
       - name: Install Chromium
         # Only the browser the suite uses. Downloading all three would add
@@ -215,6 +221,7 @@ jobs:
         run: pnpm --filter @atlas/web exec playwright install --with-deps chromium
 
       - name: Start the API
+        id: api
         # A shell loop rather than `npx wait-on`: that would pull an undeclared
         # package from the network on every run, and curl is already present.
         run: |
@@ -233,19 +240,27 @@ jobs:
           exit 1
 
       - name: End-to-end tests
+        id: e2e
         # Playwright starts the web server itself; CI never reuses one.
         run: pnpm test:e2e
 
-      - name: Upload the report on failure
-        if: failure()
-        uses: actions/upload-artifact@v4
+      # Only when Playwright actually ran. Gating on `failure()` alone meant a
+      # failure in an earlier step still triggered the upload, which then
+      # warned "No files were found" — a misleading message pointing at the
+      # wrong step. `if-no-files-found: ignore` covers the remaining case where
+      # Playwright fails before writing a report.
+      - name: Upload the Playwright report
+        if: always() && steps.e2e.outcome == 'failure'
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-report
           path: |
             apps/web/playwright-report
             apps/web/test-results
+          if-no-files-found: ignore
           retention-days: 7
 
+      # Likewise: only meaningful once the API has been started.
       - name: API log on failure
-        if: failure()
+        if: failure() && steps.api.outcome != 'skipped'
         run: cat /tmp/api.log || true

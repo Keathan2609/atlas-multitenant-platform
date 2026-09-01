@@ -23,7 +23,7 @@
       "outputs": ["coverage/**"]
     },
     "test:integration": {
-      "dependsOn": ["^build"],
+      "dependsOn": ["^build", "build"],
       "cache": false
     },
     "generate": {

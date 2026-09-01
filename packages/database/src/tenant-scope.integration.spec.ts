@@ -5,6 +5,13 @@ import { newId } from './id.js';
 /**
  * Tenant-scope extension, exercised against a real database.
  *
+ * Named *.integration.spec.ts, and run by `pnpm test:integration` rather than
+ * `pnpm test`, because it opens a Postgres connection in beforeAll. It used to
+ * be picked up by the unit config, which passed locally only because a
+ * database happened to be running — CI's service-free unit job failed with
+ * `Can't reach database server`. The classification now matches what the test
+ * actually needs.
+ *
  * These assert the behaviour the whole isolation strategy rests on. They are
  * deliberately not mocked: a mocked Prisma would happily "prove" scoping the
  * database never applied.

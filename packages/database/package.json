@@ -17,11 +17,12 @@
     "migrate:deploy": "prisma migrate deploy",
     "migrate:test": "node scripts/migrate-test.mjs",
     "reset": "prisma migrate reset --force",
-    "seed": "tsx src/seed/index.ts",
+    "seed": "prisma generate && tsx src/seed/index.ts",
     "studio": "prisma studio",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "clean": "rimraf dist .turbo",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:integration": "vitest run --config vitest.integration.config.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.2.1",
