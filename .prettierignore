@@ -7,3 +7,10 @@ pnpm-lock.yaml
 packages/database/prisma/migrations
 playwright-report
 test-results
+
+# Playwright's saved sessions and run output. Generated, gitignored, and
+# checked by Prettier regardless — which makes `pnpm format:check` fail
+# locally after any end-to-end run.
+**/.auth
+**/test-results
+**/playwright-report
