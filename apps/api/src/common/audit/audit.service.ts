@@ -120,7 +120,7 @@ export class AuditService {
    * up tenant scoping precisely inside the mutations that most need it.
    */
   async record(event: AuditEvent, tx?: AuditCapableClient): Promise<void> {
-    const client: AuditCapableClient = tx ?? (this.prisma.unscoped as unknown as AuditCapableClient);
+    const client: AuditCapableClient = tx ?? (this.prisma.unscoped);
 
     await client.auditLog.create({
       data: {

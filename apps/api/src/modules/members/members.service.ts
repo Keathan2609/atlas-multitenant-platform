@@ -115,7 +115,7 @@ export class MembersService {
         email: row.user.email,
         displayName: row.user.displayName,
         avatarUrl: row.user.avatarUrl,
-        role: row.role as OrganizationRole,
+        role: row.role,
         joinedAt: row.joinedAt,
         lastLoginAt: row.user.lastLoginAt,
       })),
@@ -172,7 +172,7 @@ export class MembersService {
 
         const decision = canChangeRole({
           actorRole: tenant.role,
-          targetCurrentRole: target.role as OrganizationRole,
+          targetCurrentRole: target.role,
           targetNewRole: newRole,
           actorIsTarget: target.userId === actorId,
           ownerCount,
@@ -250,7 +250,7 @@ export class MembersService {
         const actorIsTarget = target.userId === actorId;
         const decision = canRemoveMember({
           actorRole: tenant.role,
-          targetRole: target.role as OrganizationRole,
+          targetRole: target.role,
           actorIsTarget,
           ownerCount,
         });

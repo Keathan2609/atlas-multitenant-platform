@@ -53,7 +53,7 @@ export class EmailService implements OnModuleDestroy {
     }
   }
 
-  async onModuleDestroy(): Promise<void> {
+  onModuleDestroy(): void {
     this.transporter?.close();
   }
 

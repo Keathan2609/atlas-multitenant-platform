@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { ExecutionContext } from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
+import { type Reflector } from '@nestjs/core';
 import { AuthGuard, IS_CSRF_EXEMPT, IS_PUBLIC } from './auth.guard.js';
 import type { SessionService } from './session.service.js';
 

@@ -61,7 +61,7 @@ describe('PasswordService', () => {
     expect(passwords.needsRehash(hash)).toBe(false);
   });
 
-  it('asks to rehash a weaker hash and an unparseable one', async () => {
+  it('asks to rehash a weaker hash and an unparseable one', () => {
     // A hash produced with lower memory/time cost must be upgraded on next
     // login rather than left at the old strength forever.
     const weak = '$argon2id$v=19$m=4096,t=1,p=1$c29tZXNhbHR2YWx1ZQ$aGFzaGhhc2hoYXNoaGFzaGhhc2hoYQ';

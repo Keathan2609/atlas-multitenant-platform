@@ -75,7 +75,7 @@ export function createLogger(config: LoggerConfig): Logger {
         // Deep-scrub the merge object before it reaches the transport. This is
         // what catches secrets that Pino's path-based redaction cannot see.
         if (args.length > 0 && typeof args[0] === 'object' && args[0] !== null) {
-          args[0] = redact(args[0]) as never;
+          args[0] = redact(args[0]);
         }
         return method.apply(this, args as never);
       },

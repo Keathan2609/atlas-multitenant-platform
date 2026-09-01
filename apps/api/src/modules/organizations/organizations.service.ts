@@ -152,7 +152,7 @@ export class OrganizationsService {
       id: membership.organization.id,
       name: membership.organization.name,
       slug: membership.organization.slug,
-      role: membership.role as OrganizationRole,
+      role: membership.role,
       memberCount: membership.organization._count.memberships,
       joinedAt: membership.joinedAt,
     }));

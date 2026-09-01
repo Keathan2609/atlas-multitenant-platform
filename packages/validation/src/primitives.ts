@@ -99,10 +99,13 @@ export const uuidSchema = z.string().uuid('Not a valid identifier.');
 export const displayNameSchema = z
   .string()
   .trim()
-  .min(1, 'This field is required.')
+  .min(1, 'Enter a name.')
   .max(120, 'Use at most 120 characters.')
   // Control characters render as invisible glyphs and are a common vector for
-  // spoofing names in member lists and audit entries.
+  // spoofing names in member lists and audit entries. Matching them
+  // literally is the point, so the rule is disabled deliberately here rather
+  // than the check being weakened to satisfy it.
+  // eslint-disable-next-line no-control-regex
   .refine((v) => !/[\u0000-\u001F\u007F]/.test(v), 'Control characters are not allowed.');
 
 export const descriptionSchema = z

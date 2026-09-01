@@ -89,7 +89,7 @@ export class SettingsService {
         allowedEmailDomains: domains,
         sessionIdleTimeoutMinutes: input.sessionIdleTimeoutMinutes ?? null,
         requireTwoFactor: input.requireTwoFactor ?? false,
-      } as never,
+      },
       update: {
         ...(input.restrictEmailDomains !== undefined
           ? { restrictEmailDomains: input.restrictEmailDomains }

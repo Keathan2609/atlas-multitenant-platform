@@ -98,7 +98,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
             ...(appError.details ? { details: appError.details } : {}),
           },
         },
-        logLevel: appError.status >= 500 ? 'error' : 'warn',
+        logLevel: Number(appError.status) >= 500 ? 'error' : 'warn',
         logPayload: {
           code: appError.code,
           ...(appError.logContext ?? {}),
@@ -106,7 +106,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
           // level, so genuine column-data corruption is still diagnosable
           // even though the client sees a 404.
           ...(translated ? { translatedFrom: 'prisma', err: exception } : {}),
-          ...(appError.status >= 500 ? { err: exception } : {}),
+          ...(Number(appError.status) >= 500 ? { err: exception } : {}),
         },
       };
     }
@@ -115,7 +115,9 @@ export class AllExceptionsFilter implements ExceptionFilter {
     // our code runs. Mapped onto the taxonomy so a 404 from an unmatched route
     // has the same envelope as a 404 from a service.
     if (exception instanceof HttpException) {
-      const status = exception.getStatus();
+      // getStatus() is typed `number`; every value it returns here is an
+      // HttpStatus, and the switches below are written against that enum.
+      const status: HttpStatus = exception.getStatus();
       return {
         status,
         body: {
@@ -125,7 +127,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
             requestId,
           },
         },
-        logLevel: status >= 500 ? 'error' : 'warn',
+        logLevel: Number(status) >= 500 ? 'error' : 'warn',
         logPayload: { nestException: exception.name },
       };
     }
@@ -147,7 +149,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     };
   }
 
-  private codeForStatus(status: number): string {
+  private codeForStatus(status: HttpStatus): string {
     switch (status) {
       case HttpStatus.BAD_REQUEST:
         return ErrorCode.MALFORMED_REQUEST;
@@ -166,7 +168,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     }
   }
 
-  private messageForStatus(status: number): string {
+  private messageForStatus(status: HttpStatus): string {
     switch (status) {
       case HttpStatus.BAD_REQUEST:
         return 'The request could not be understood.';

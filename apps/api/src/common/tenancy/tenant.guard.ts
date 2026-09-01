@@ -1,7 +1,6 @@
 import { type CanActivate, type ExecutionContext, Injectable, SetMetadata } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import type { Request } from 'express';
-import type { OrganizationRole } from '@atlas/types';
 import type { Logger } from '@atlas/observability';
 import { Inject } from '@nestjs/common';
 import { LOGGER_TOKEN } from '../logging/logger.provider.js';
@@ -105,7 +104,7 @@ export class TenantGuard implements CanActivate {
       organizationId: membership.organization.id,
       slug: membership.organization.slug,
       name: membership.organization.name,
-      role: membership.role as OrganizationRole,
+      role: membership.role,
       membershipId: membership.id,
     };
 

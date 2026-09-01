@@ -35,7 +35,7 @@ export interface TenantContext {
 }
 
 declare global {
-  // eslint-disable-next-line @typescript-eslint/no-namespace -- Express's own
+   
   // augmentation pattern requires declaration merging into this namespace.
   namespace Express {
     interface Request {

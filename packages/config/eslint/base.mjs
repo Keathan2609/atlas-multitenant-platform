@@ -42,9 +42,21 @@ export const baseConfig = [
         {
           patterns: [
             {
-              group: ['../../*'],
+              // Escaping the package, not merely climbing inside it. `../../*`
+              // was the original pattern and it condemned every ordinary
+              // intra-package import — `../../common/errors/app-error.js` from
+              // a controller is the convention here, not a violation. What
+              // actually breaks the boundary is a relative path that reaches
+              // back down into another workspace package.
+              group: ['../**/packages/**', '../**/apps/**'],
               message:
                 'Reach across package boundaries with the @atlas/* workspace alias, not a relative path.',
+            },
+            {
+              // Importing a sibling's build output couples to an artefact that
+              // may not exist yet and skips the type source entirely.
+              group: ['**/dist/**'],
+              message: 'Import from the package entry point, not its build output.',
             },
           ],
         },
