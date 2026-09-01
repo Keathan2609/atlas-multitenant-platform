@@ -1,4 +1,25 @@
 import 'reflect-metadata';
+import path from 'node:path';
+import { config as loadDotenv } from 'dotenv';
+
+/**
+ * Development environment file.
+ *
+ * Must run before anything reads process.env, hence its position above the
+ * remaining imports. In production the environment comes from the orchestrator
+ * — a container, a systemd unit, a platform's secret store — and no file is
+ * read, which is why this is gated on NODE_ENV: a .env sitting on a production
+ * host should never silently win over what the platform injected.
+ *
+ * dotenv does not overwrite variables that are already set, so an explicit
+ * `DATABASE_URL=… pnpm dev` still takes precedence over the file.
+ */
+if (process.env.NODE_ENV !== 'production') {
+  // cwd is apps/api under `nest start`; the file lives at the repository root
+  // so one .env serves the API, the seed script, and the integration suite.
+  loadDotenv({ path: path.resolve(process.cwd(), '../../.env') });
+}
+
 import { NestFactory } from '@nestjs/core';
 import { VersioningType } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
@@ -132,7 +153,6 @@ async function bootstrap(): Promise<void> {
 bootstrap().catch((error: unknown) => {
   // The logger may not exist yet if config validation failed, so this one
   // place legitimately writes to stderr directly.
-  // eslint-disable-next-line no-console
   console.error('Failed to start ATLAS API:', error);
   process.exit(1);
 });
