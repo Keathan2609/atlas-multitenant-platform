@@ -219,7 +219,12 @@ export class ApiKeysService {
       return null;
     }
 
+    // Unscoped by necessity: the key is the claim. Nothing has established a
+    // tenant at this point — this lookup is what produces the organizationId
+    // that everything downstream is then scoped to. The lookup is by a SHA-256
+    // of 256 bits of CSPRNG output, so there is nothing to enumerate.
     const record = await this.prisma.unscoped.apiKey.findUnique({
+      // eslint-disable-next-line no-restricted-syntax
       where: { keyHash: this.hash(rawKey) },
       select: {
         id: true,

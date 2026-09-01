@@ -66,16 +66,64 @@ export const baseConfig = [
   prettier,
 ];
 
-/** Rules that only make sense where a Prisma client is in scope. */
+/*
+ * Tenant-safety rules — the lint-level half of the strategy in
+ * docs/multi-tenancy.md, and the third layer behind the composite foreign keys
+ * and the scoped Prisma client.
+ *
+ * The selector is deliberately narrow, because a rule that fires on correct
+ * code is a rule that gets disabled wholesale, taking the real protection with
+ * it. It matches only the intersection that is genuinely dangerous:
+ *
+ *   - the *unscoped* client. `forTenant()` returns a client whose extension
+ *     injects organizationId into every query, so `db.project.findFirst()` is
+ *     safe by construction — and it is the very remedy this rule recommends.
+ *   - a *tenant-owned* model. User, Session and Organization are global by
+ *     design (see NON_TENANT_MODELS in @atlas/database); demanding an
+ *     organizationId on a login lookup would be nonsense.
+ *   - a `where` with no organizationId, on a read that returns a single row.
+ *
+ * What survives is the real hazard: reaching a tenant's row through the
+ * unscoped client on a bare id or unique column. The two legitimate cases —
+ * resolving an API key or an invitation token, where the credential *is* the
+ * claim and the tenant is not yet known — carry an inline disable naming the
+ * reason, which is exactly the point: each escape hatch is visible in the code
+ * rather than buried in a commit message.
+ */
+const TENANT_OWNED_ACCESSORS = [
+  'organizationMembership',
+  'organizationSettings',
+  'team',
+  'teamMembership',
+  'workspace',
+  'project',
+  'projectMembership',
+  'workItem',
+  'auditLog',
+  'apiKey',
+  'invitation',
+].join('|');
+
+const unscopedTenantRead = (method) =>
+  `CallExpression[callee.property.name='${method}']` +
+  `[callee.object.object.property.name='unscoped']` +
+  `[callee.object.property.name=/^(${TENANT_OWNED_ACCESSORS})$/]` +
+  ` > ObjectExpression > Property[key.name='where']` +
+  ` > ObjectExpression:not(:has(Property[key.name='organizationId']))`;
+
 export const prismaTenantSafetyConfig = {
   rules: {
     'no-restricted-syntax': [
       'error',
       {
-        selector:
-          "CallExpression[callee.property.name='findUnique'] > ObjectExpression > Property[key.name='where'] > ObjectExpression:not(:has(Property[key.name='organizationId']))",
+        selector: unscopedTenantRead('findUnique'),
         message:
-          'findUnique() on a tenant-owned model bypasses tenant scoping. Use the scoped repository (TenantScope) or include organizationId in the where clause. See docs/multi-tenancy.md.',
+          'findUnique() on a tenant-owned model through the unscoped client bypasses tenant scoping. Use prisma.forTenant(organizationId), or include organizationId in the where clause. See docs/multi-tenancy.md.',
+      },
+      {
+        selector: unscopedTenantRead('findFirst'),
+        message:
+          'findFirst() on a tenant-owned model through the unscoped client bypasses tenant scoping. Use prisma.forTenant(organizationId), or include organizationId in the where clause. See docs/multi-tenancy.md.',
       },
       {
         selector: "CallExpression[callee.property.name='$queryRawUnsafe']",

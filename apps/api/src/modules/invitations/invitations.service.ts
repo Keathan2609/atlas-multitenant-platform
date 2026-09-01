@@ -389,7 +389,12 @@ export class InvitationsService {
       );
     }
 
+    // Unscoped by necessity, same reasoning as API-key verification: the token
+    // is the claim, and the recipient is not a member of the organization yet,
+    // so there is no tenant context to scope by. Looked up by hash, never by
+    // the raw token.
     const invitation = await this.prisma.unscoped.invitation.findUnique({
+      // eslint-disable-next-line no-restricted-syntax
       where: { tokenHash: this.hash(rawToken) },
       select: {
         id: true,

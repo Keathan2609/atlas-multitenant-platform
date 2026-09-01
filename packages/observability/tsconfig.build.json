@@ -1,11 +1,12 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
   "extends": "./tsconfig.json",
+  "exclude": [
+    "node_modules",
+    "dist",
+    "src/**/*.spec.ts"
+  ],
   "compilerOptions": {
-    // A separate build info file: the two projects see different file sets, and
-    // sharing one would let a lint-only typecheck convince the build that its
-    // emit was already up to date.
     "tsBuildInfoFile": "dist/.tsbuildinfo.build"
-  },
-  "exclude": ["node_modules", "dist", "src/**/*.spec.ts"]
+  }
 }

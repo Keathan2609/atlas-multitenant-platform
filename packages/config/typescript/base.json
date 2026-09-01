@@ -24,13 +24,26 @@
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "incremental": true,
-    // Inside outDir on purpose. With the build-info file outside the output
-    // directory, any tool that wipes dist (nest build --deleteOutDir, rimraf)
-    // leaves tsc believing the emit is still current, so the next build
-    // silently produces nothing. Keeping them together makes the cache and
-    // the artifacts share a lifetime.
-    "tsBuildInfoFile": "dist/.tsbuildinfo"
+    // tsBuildInfoFile is deliberately NOT set here, and every package that
+    // extends this file must set it itself. Two traps meet at this option:
+    //
+    //   - A relative path in a tsconfig resolves against the file that
+    //     *declares* it. "dist/.tsbuildinfo" written here resolved to
+    //     packages/config/typescript/dist/ for every consumer — one shared
+    //     cache, outside each package's own outDir, with packages trampling
+    //     each other's.
+    //   - Left unset, TypeScript does not put it in outDir. Without
+    //     `composite`, the default is <configDir>/<configName>.tsbuildinfo,
+    //     which sits next to the tsconfig and therefore also outside dist.
+    //
+    // Either way the build info outlives a wiped dist, so
+    // `nest build --deleteOutDir` leaves tsc believing the emit is current:
+    // it produces nothing and exits 0. That is not a theoretical failure —
+    // `pnpm build` shipped an empty apps/api/dist because of it.
+    //
+    // Setting it per package, to a path inside that package's own dist, is
+    // what makes the cache and the artifacts share a lifetime.
+    "incremental": true
   },
   "exclude": ["node_modules", "dist", ".next", ".turbo", "coverage"]
 }

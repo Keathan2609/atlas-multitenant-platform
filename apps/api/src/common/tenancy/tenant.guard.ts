@@ -72,7 +72,12 @@ export class TenantGuard implements CanActivate {
     // One indexed query answers both questions at once: does the organization
     // exist, and is this user a member of it? Splitting them into two lookups
     // would open the timing difference the 404 collapse is meant to close.
+    // Unscoped by necessity: this query is *how* the tenant is resolved. There
+    // is no organizationId to scope by until this row is found, and the row
+    // itself is the proof of membership. Scoped by userId instead, which is the
+    // authenticated identity, so it cannot read another user's membership.
     const membership = await this.prisma.unscoped.organizationMembership.findFirst({
+      // eslint-disable-next-line no-restricted-syntax
       where: {
         userId: user.id,
         organization: { slug, deletedAt: null },
