@@ -1,0 +1,29 @@
+# Gitleaks configuration.
+#
+# Extends the default ruleset rather than replacing it, so every upstream rule
+# still applies and new ones arrive with tool upgrades.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Fixtures that must look like secrets for the test to mean anything"
+
+paths = [
+  # packages/observability/src/redaction.spec.ts asserts that the logger
+  # scrubs credentials. Its inputs are deliberately secret-shaped — a
+  # redaction test with no secret in it proves nothing. The values are
+  # invented (atlas_live_abc123def456 and similar) and authenticate nothing.
+  '''packages/observability/src/redaction\.spec\.ts''',
+]
+
+regexes = [
+  # The committed .env.example ships non-functional placeholders. They are
+  # prefixed dev_only_ precisely so they are recognisable, and the API's
+  # config schema refuses to boot in production if it sees that prefix —
+  # see apps/api/src/config/env.ts.
+  '''dev_only_[a-z_]+_change_me_[0-9a-f]+''',
+
+  # The seeded demo password, documented in the README so a reviewer can sign
+  # in. It only exists in a local development database created by pnpm db:seed.
+  '''atlas-demo-password''',
+]
