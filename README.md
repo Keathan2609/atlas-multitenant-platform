@@ -1,8 +1,11 @@
 # ATLAS
 
+[![CI](https://github.com/Keathan2609/atlas-multitenant-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/Keathan2609/atlas-multitenant-platform/actions/workflows/ci.yml)
+[![Licence: MIT](https://img.shields.io/badge/licence-MIT-blue.svg)](./LICENSE)
+
 Operations infrastructure for teams that run software. A multi-tenant SaaS
 platform where organizations manage workspaces, projects, work items, teams,
-members, API keys and an audit trail with tenant isolation, role-based
+members, API keys and an audit trail, with tenant isolation, role-based
 access control, and an interface built for people who keep it open all day.
 
 This is a portfolio project, built to be read. The decisions are argued in the
@@ -79,7 +82,7 @@ anyway.
 | **Backend**  | NestJS, Prisma, PostgreSQL 16, Redis                              |
 | **Frontend** | Next.js (App Router), React, TanStack Query, Tailwind v4, Radix   |
 | **Shared**   | Zod schemas, an RBAC matrix, and a logger, all used by both sides |
-| **Testing**  | Vitest, Supertest, against real Postgres and Redis                |
+| **Testing**  | Vitest, Supertest, Playwright, against real Postgres and Redis    |
 
 ```mermaid
 flowchart LR
@@ -103,7 +106,7 @@ flowchart LR
 
 The shared packages are the point of the monorepo, not decoration. The
 permission matrix has one definition, used by the API to decide what is
-_allowed_ and by the web app to decide what to _render_ — those are different
+_allowed_ and by the web app to decide what to _render_. Those are different
 jobs, and only one of them is a security control. The Zod schemas validate the
 form and the endpoint from the same source, so a field cannot drift between
 them.
@@ -112,30 +115,30 @@ them.
 
 ## The parts worth reading
 
-**[Multi-tenancy](./docs/multi-tenancy.md)** — three layers: composite foreign
+**[Multi-tenancy](./docs/multi-tenancy.md)** covers three layers: composite foreign
 keys that make a cross-tenant reference physically unrepresentable, a Prisma
 client extension that injects `organizationId` into every query, and guards
 that resolve the tenant from a membership row rather than trusting the URL. The
 five escape hatches are enumerated and each is justified inline.
 
-**[Security](./docs/security.md)** — Argon2id, opaque sessions, double-submit
+**[Security](./docs/security.md)**: Argon2id, opaque sessions, double-submit
 CSRF with opt-in exemptions, credentials hashed at rest, 404-not-403 for
 cross-tenant resources, and the last-owner invariants. Includes the known gaps.
 
-**[API](./docs/api.md)** — the error envelope, why pagination is offset in one
+**[API](./docs/api.md)**: the error envelope, why pagination is offset in one
 place and cursor in another, and why guards run before validation.
 
-**[Database](./docs/database.md)** — UUIDv7 identifiers, cascade behaviour, and
+**[Database](./docs/database.md)**: UUIDv7 identifiers, cascade behaviour, and
 why `SetNull` is unusable on a composite foreign key.
 
-**[Testing](./docs/testing.md)** — what 242 tests actually assert across three
+**[Testing](./docs/testing.md)**: what 242 tests actually assert across three
 layers, and why the end-to-end suite authenticates once rather than per test.
 
-**[Decisions](./docs/decisions)** — ADRs for the choices that were genuinely
+**[Decisions](./docs/decisions)**: ADRs for the choices that were genuinely
 contested.
 
 **[Screen inventory](./docs/screen-inventory.md)** and
-**[verification log](./docs/verification-log.md)** — the frozen list of product
+**[verification log](./docs/verification-log.md)**: the frozen list of product
 surfaces, and the fourteen defects that driving a real browser found after
 everything was typecheck- and lint-clean.
 
@@ -171,6 +174,11 @@ The production API image has been built and run: it connects to Postgres and
 Redis, answers both health probes, serves a real login, and runs as a non-root
 user.
 
+CI is verified, not just written. The GitHub Actions workflow runs on every
+push and pull request, and the whole pipeline passes: lint, typecheck,
+formatting checks, unit tests, integration tests against real Postgres and
+Redis, and the end-to-end suite against a production build.
+
 What is missing, stated plainly:
 
 - **Two-factor authentication is a recorded policy, not an enforcement.** The
@@ -181,9 +189,6 @@ What is missing, stated plainly:
   marks; nothing sweeps.
 - **No visual regression testing.** The end-to-end suite asserts structure and
   layout properties, not pixels.
-- **The CI workflow has never run.** It is written so every step mirrors a
-  command verified locally, but GitHub Actions cannot be exercised from here,
-  and it should be treated as unproven until a first push.
 
 ---
 
